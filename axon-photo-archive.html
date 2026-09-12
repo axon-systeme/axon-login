@@ -23,6 +23,10 @@
     cursor:pointer;margin-bottom:14px;
   }
   .photo-box img{max-width:100%;border-radius:8px;margin-top:10px;}
+  .archiver-box{
+    background:var(--ink-3);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:0.85rem;
+  }
+  .archiver-box b{color:var(--gold);}
   .fp-btn{
     width:100%;padding:14px;border:none;border-radius:8px;
     background:linear-gradient(135deg,#3b6fd6,#5a8ef0);color:#fff;
@@ -42,6 +46,10 @@
 <h1>AXON — أرشفة الفاتورة بالصورة</h1>
 
 <div class="card">
+  <div class="archiver-box">
+    المؤرشف الحالي: <b id="archiverName">جاري التحميل...</b>
+  </div>
+
   <label>الحساب (الجهة)</label>
   <select id="accountSelect"><option value="">جاري تحميل الحسابات...</option></select>
 
@@ -59,16 +67,52 @@
   <div class="msg" id="msgBox"></div>
 </div>
 
-<script src="https://unpkg.com/@simplewebauthn/browser@10/dist/bundle/index.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@10/dist/bundle/index.umd.min.js"></script>
 <script>
-const SB_URL = "https://tmizzjieyeqbcxuxoucw.supabase.co";
-const SB_KEY = "sb_publishable_0MXFCqGL0eqkteVozjLtDQ_VCmGeXhM";
-const H = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" };
+const SUPABASE_URL = "https://tmizzjieyeqbcxuxoucw.supabase.co";
+const ANON_KEY = "sb_publishable_0MXFCqGL0eqkteVozjLtDQ_VCmGeXhM";
 
-const currentPersonId = localStorage.getItem('axon_person_id');
-const currentPersonEmail = localStorage.getItem('axon_email');
+const REAL_SLUGS = {
+  "get-user-context": "bright-handler",
+  "login-biometric-options": "smart-endpoint",
+  "login-biometric-verify": "rapid-api"
+};
+function fn(name){
+  const slug = REAL_SLUGS[name] || name;
+  return `${SUPABASE_URL}/functions/v1/${slug}`;
+}
+function headers(){
+  return {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${ANON_KEY}`,
+    "apikey": ANON_KEY
+  };
+}
 
+const params = new URLSearchParams(window.location.search);
+const userId = params.get('uid') || sessionStorage.getItem('axon_user_id');
+if(!userId){
+  window.location.href = "axon-portal.html";
+}
+
+let currentUserEmail = null;
 let selectedFile = null;
+
+async function loadArchiverInfo(){
+  try{
+    const res = await fetch(fn('get-user-context'), {
+      method:'POST', headers: headers(), body: JSON.stringify({ user_id: userId })
+    });
+    const data = await res.json();
+    if(data.success){
+      currentUserEmail = data.user.email;
+      document.getElementById('archiverName').textContent = data.user.full_name || data.user.email;
+    }
+  }catch(e){
+    document.getElementById('archiverName').textContent = 'تعذر التحميل';
+  }
+}
+loadArchiverInfo();
 
 document.getElementById('photoBox').addEventListener('click', ()=>{
   document.getElementById('photoInput').click();
@@ -90,7 +134,7 @@ document.getElementById('photoInput').addEventListener('change', function(e){
 async function loadAccounts(){
   const sel = document.getElementById('accountSelect');
   try{
-    const res = await fetch(`${SB_URL}/rest/v1/accounts?select=id,name`, { headers: H });
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/accounts?select=id,name`, { headers: headers() });
     const data = await res.json();
     sel.innerHTML = '<option value="">اختر الحساب...</option>';
     data.forEach(a=>{
@@ -123,9 +167,14 @@ document.getElementById('confirmBtn').addEventListener('click', async function()
     msgBox.textContent = 'أضف صورة الفاتورة أولاً.';
     return;
   }
-  if(!currentPersonEmail){
+  if(!currentUserEmail){
     msgBox.className = 'msg err';
     msgBox.textContent = 'تعذر التعرف على المستخدم الحالي. سجّل الدخول من جديد.';
+    return;
+  }
+  if(!window.PublicKeyCredential){
+    msgBox.className = 'msg err';
+    msgBox.textContent = 'هذا الجهاز/المتصفح لا يدعم البصمة (WebAuthn).';
     return;
   }
 
@@ -133,38 +182,40 @@ document.getElementById('confirmBtn').addEventListener('click', async function()
   btn.textContent = 'جاري التحقق من البصمة...';
 
   try{
-    const optRes = await fetch(`${SB_URL}/functions/v1/login-biometric-options`, {
-      method:'POST', headers: H, body: JSON.stringify({ email: currentPersonEmail })
+    const optRes = await fetch(fn('login-biometric-options'), {
+      method:'POST', headers: headers(), body: JSON.stringify({ email: currentUserEmail })
     });
     const options = await optRes.json();
+    if(options.error){ throw new Error(options.error); }
 
-    const assertion = await SimpleWebAuthnBrowser.startAuthentication(options);
+    const authResp = await SimpleWebAuthnBrowser.startAuthentication(options);
 
-    const verifyRes = await fetch(`${SB_URL}/functions/v1/login-biometric-verify`, {
-      method:'POST', headers: H, body: JSON.stringify({ email: currentPersonEmail, assertion })
+    const verifyRes = await fetch(fn('login-biometric-verify'), {
+      method:'POST', headers: headers(),
+      body: JSON.stringify({ user_id: userId, assertion_response: authResp })
     });
     const verifyData = await verifyRes.json();
-    if(!verifyData.verified){
-      throw new Error('فشل التحقق من البصمة.');
+    if(!verifyData.success){
+      throw new Error(verifyData.error || 'فشل التحقق من البصمة.');
     }
 
     btn.textContent = 'جاري رفع الصورة...';
     const fileName = `${accountId}/${Date.now()}_${selectedFile.name}`;
-    const uploadRes = await fetch(`${SB_URL}/storage/v1/object/invoice-photos/${fileName}`, {
+    const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/invoice-photos/${fileName}`, {
       method:'POST',
-      headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": selectedFile.type },
+      headers: { "Authorization": `Bearer ${ANON_KEY}`, "apikey": ANON_KEY, "Content-Type": selectedFile.type },
       body: selectedFile
     });
     if(!uploadRes.ok){
       throw new Error('فشل رفع الصورة.');
     }
 
-    const insertRes = await fetch(`${SB_URL}/rest/v1/photo_archive`, {
+    const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/photo_archive`, {
       method:'POST',
-      headers: { ...H, "Prefer": "return=representation" },
+      headers: { ...headers(), "Prefer": "return=representation" },
       body: JSON.stringify({
         account_id: accountId,
-        archived_by: currentPersonId,
+        archived_by: userId,
         image_path: fileName,
         note: note || null
       })
@@ -178,7 +229,7 @@ document.getElementById('confirmBtn').addEventListener('click', async function()
     msgBox.className = 'msg ok';
     msgBox.innerHTML = `تمت الأرشفة بنجاح ✅
       <div class="confirm-box">
-        المؤرشف: ${currentPersonEmail}<br>
+        المؤرشف: ${currentUserEmail}<br>
         الوقت: ${savedAt.toLocaleTimeString('ar')}<br>
         التاريخ: ${savedAt.toLocaleDateString('ar')}<br>
         لا يمكن تعديل أو حذف هذا السجل نهائيًا.
