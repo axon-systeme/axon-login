@@ -207,7 +207,8 @@ document.getElementById('confirmBtn').addEventListener('click', async function()
       body: selectedFile
     });
     if(!uploadRes.ok){
-      throw new Error('فشل رفع الصورة.');
+      const errText = await uploadRes.text();
+throw new Error('فشل رفع الصورة: ' + uploadRes.status + ' - ' + errText);
     }
 
     const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/photo_archive`, {
