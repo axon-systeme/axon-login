@@ -23,7 +23,8 @@ th{color:#8a93a8;}
 
 <h2>أرشيف الفواتير</h2>
 <div id="invoicesArchive">جاري التحميل...</div>
-
+<h2>أرشيف الفواتير بالصورة</h2>
+<div id="photoArchiveContainer">جاري التحميل...</div>
 <script>
 var URL = "https://tmizzjieyeqbcxuxoucw.supabase.co";
 var KEY = "sb_publishable_0MXFCqGL0eqkteVozjLtDQ_VCmGeXhM";
@@ -118,6 +119,58 @@ Promise.all([
   document.getElementById('invoicesArchive').innerHTML = "تعذر تحميل الأرشيف: " + e.message;
 });
   });
+  Promise.all([
+  fetch(URL + "/rest/v1/accounts?select=id,name", { headers: H }).then(function(r){ return r.json(); }),
+  fetch(URL + "/rest/v1/users?select=id,full_name,email", { headers: H }).then(function(r){ return r.json(); }),
+  fetch(URL + "/rest/v1/photo_archive?select=*&order=created_at.desc", { headers: H }).then(function(r){ return r.json(); })
+]).then(function(results){
+  var accounts = results[0], users = results[1], photos = results[2];
+  var accMap = {}; accounts.forEach(function(a){ accMap[a.id] = a.name; });
+  var userMap = {}; users.forEach(function(u){ userMap[u.id] = u.full_name || u.email; });
+
+  var container = document.getElementById('photoArchiveContainer');
+  if(!Array.isArray(photos) || photos.length === 0){
+    container.innerHTML = "لا توجد فواتير مؤرشفة بالصورة بعد.";
+    return;
+  }
+
+  var html = "";
+  var signPromises = [];
+
+  photos.forEach(function(p, idx){
+    var accName = accMap[p.account_id] || p.account_id;
+    var archiverName = userMap[p.archived_by] || p.archived_by;
+    var date = p.created_at ? new Date(p.created_at).toLocaleString('ar') : "";
+
+    html += "<div class='invoice-card' id='photoCard" + idx + "'>";
+    html += "<div class='invoice-head'><b>" + accName + "</b><span>" + date + "</span></div>";
+    html += "<div class='invoice-meta'>المؤرشف: " + archiverName + (p.note ? " — " + p.note : "") + "</div>";
+    html += "<div class='photo-wrap' id='photoImg" + idx + "'>جاري تحميل الصورة...</div>";
+    html += "</div>";
+
+    var signPromise = fetch(URL + "/storage/v1/object/sign/invoice-photos/" + p.image_path, {
+      method: 'POST', headers: H, body: JSON.stringify({ expiresIn: 3600 })
+    }).then(function(r){ return r.json(); }).then(function(signData){
+      return { idx: idx, url: signData.signedURL };
+    });
+    signPromises.push(signPromise);
+  });
+
+  container.innerHTML = html;
+
+  Promise.all(signPromises).then(function(signResults){
+    signResults.forEach(function(sr){
+      var el = document.getElementById('photoImg' + sr.idx);
+      if(sr.url){
+        el.innerHTML = "<img src='" + URL + sr.url + "' style='max-width:100%;border-radius:8px;'>";
+      } else {
+        el.textContent = "تعذر تحميل الصورة.";
+      }
+    });
+  });
+}).catch(function(e){
+  document.getElementById('photoArchiveContainer').innerHTML = "تعذر تحميل الأرشيف بالصورة: " + e.message;
+});
 </script>
 </body>
 </html>
