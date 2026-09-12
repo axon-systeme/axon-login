@@ -158,7 +158,11 @@
       <button class="btn" id="btnAddAccount" style="width:100%;">+ إضافة حساب محمي</button>
     </div>
   </div>
-
+<div class="card" id="cardPhotoArchive" style="display:none;">
+  <h2>أرشفة بالصورة</h2>
+  <div class="sub">صوّر الفاتورة الورقية وأرشفها ببصمة اليد.</div>
+  <button class="btn" style="width:100%;margin-top:10px;" onclick="window.location.href='axon-photo-archive.html'">📷 فتح صفحة الأرشفة</button>
+</div>
   <div class="card" id="cardHomeEmpty">
     <h2>الرئيسية</h2>
     <div class="sub">هذا القسم مخصص لمؤسسات الشركات فقط</div>
@@ -314,6 +318,7 @@ async function loadUserContext(){
 
 loadUserContext().then(()=>{
   if(currentOrgType === 'company'){
+   document.getElementById('cardPhotoArchive').style.display = 'block'; 
     document.getElementById('cardProtectedAccounts').style.display = 'block';
     document.getElementById('cardAddEmployee').style.display = '';
     document.getElementById('cardEmployeesList').style.display = '';
