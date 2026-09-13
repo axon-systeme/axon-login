@@ -159,9 +159,13 @@
     </div>
   </div>
 <div class="card" id="cardPhotoArchive" style="display:none;">
-  <h2>أرشفة بالصورة</h2>
-  <div class="sub">صوّر الفاتورة الورقية وأرشفها ببصمة اليد.</div>
-  <button class="btn" style="width:100%;margin-top:10px;" onclick="window.location.href='axon-photo-archive.html'">📷 فتح صفحة الأرشفة</button>
+  <h2>الأرشفة</h2>
+  <div class="sub">صور الوثائق وأرشفها ببصمة اليد.</div>
+  <label style="display:block;font-size:0.82rem;color:var(--slate);margin-bottom:6px;">اختر الحساب</label>
+  <select id="archiveAccountSelect" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--ink-3);background:var(--ink);color:var(--white);font-size:0.95rem;margin-bottom:10px;">
+    <option value="">جاري تحميل الحسابات...</option>
+  </select>
+  <button class="btn" id="btnGoArchive" style="width:100%;margin-top:4px;">📷 الذهاب للأرشفة</button>
 </div>
   <div class="card" id="cardHomeEmpty">
     <h2>الرئيسية</h2>
@@ -315,7 +319,27 @@ async function loadUserContext(){
     }
   }catch(e){ document.body.insertAdjacentHTML('afterbegin', `<div style="background:darkred;color:white;padding:10px;font-size:13px;">CATCH ERROR: ${e.message}</div>`); }
 }
+function loadArchiveAccounts(){
+  fetch(`${SUPABASE_URL}/rest/v1/accounts?select=id,name`, { headers: headers() })
+    .then(r=>r.json()).then(data=>{
+      const sel = document.getElementById('archiveAccountSelect');
+      sel.innerHTML = '<option value="">اختر الحساب...</option>';
+      data.forEach(a=>{
+        const opt = document.createElement('option');
+        opt.value = a.id;
+        opt.textContent = a.name;
+        sel.appendChild(opt);
+      });
+    }).catch(()=>{
+      document.getElementById('archiveAccountSelect').innerHTML = '<option value="">تعذر التحميل</option>';
+    });
+}
 
+document.getElementById('btnGoArchive').addEventListener('click', ()=>{
+  const accId = document.getElementById('archiveAccountSelect').value;
+  if(!accId){ alert('اختر الحساب أولاً.'); return; }
+  window.location.href = 'axon-archiving.html?id=' + accId;
+});
 loadUserContext().then(()=>{
   if(currentOrgType === 'company'){
    document.getElementById('cardPhotoArchive').style.display = 'block'; 
@@ -324,7 +348,8 @@ loadUserContext().then(()=>{
     document.getElementById('cardEmployeesList').style.display = '';
     document.getElementById('cardHomeEmpty').style.display = 'none';
     loadEmployees();
-    loadProtectedAccounts();
+        loadProtectedAccounts();
+        loadArchiveAccounts();
   }
 });
 
