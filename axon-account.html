@@ -259,6 +259,9 @@
   <button class="tab-btn" data-tab="tabMessages">
     <span class="icon">✉️</span><span>البريد</span>
   </button>
+   <button class="tab-btn" data-tab="tabArchiving">
+        <span class="icon">📁</span><span>الأرشفة</span>
+      </button>
   <button class="tab-btn active" data-tab="tabProfile">
     <span class="icon">👤</span><span>البروفايل</span>
   </button>
@@ -691,7 +694,7 @@ document.getElementById('btnRegisterBiometric').addEventListener('click', async 
     const verifyRes = await fetch(fnUrl(REGISTER_VERIFY_FN), {
       method:'POST', headers: headers(),
       body: JSON.stringify({
-        user_id: userId,
+        user_id: userId
         attestation_response: regResp,
         device_label: navigator.userAgent.slice(0, 60)
       })
