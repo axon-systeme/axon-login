@@ -239,8 +239,21 @@
       <div class="loading">جاري التحميل...</div>
     </div>
   </div>
-</div>
- <div class="bottom-bar">
+    </div>
+
+    <div class="tab-section" id="tabArchiving">
+      <div class="card" id="cardPhotoArchive">
+        <h2>الأرشفة</h2>
+        <div class="sub">صور الوثائق وأرشفها ببصمة اليد.</div>
+        <label style="display:block;font-size:0.82rem;color:var(--slate);margin-bottom:6px;">اختر الحساب</label>
+        <select id="archiveAccountSelect" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--ink-3);background:var(--ink);color:var(--white);margin-bottom:10px;">
+          <option value="">جاري تحميل الحسابات...</option>
+        </select>
+        <button class="btn" id="btnGoArchive" style="width:100%;margin-top:4px;">📷 الذهاب للأرشفة</button>
+      </div>
+    </div>
+
+     <div class="bottom-bar">
   <button class="tab-btn" data-tab="tabHome">
     <span class="icon">🏠</span><span>الرئيسية</span>
   </button>
