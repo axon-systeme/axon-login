@@ -697,7 +697,7 @@ document.getElementById('btnRegisterBiometric').addEventListener('click', async 
     const verifyRes = await fetch(fnUrl(REGISTER_VERIFY_FN), {
       method:'POST', headers: headers(),
       body: JSON.stringify({
-        user_id: userId
+        user_id: userId,
         attestation_response: regResp,
         device_label: navigator.userAgent.slice(0, 60)
       })
