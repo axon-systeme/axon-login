@@ -136,6 +136,7 @@ var signPromise = fetch(URL + "/storage/v1/object/sign/invoice-photos/" + p.imag
         } else {
           el.textContent = "تعذر تحميل الصورة: " + sr.err;
         }
+      });
   });
 }).catch(function(e){
   document.getElementById('photoArchiveContainer').innerHTML = "تعذر تحميل الأرشيف بالصورة: " + e.message;
