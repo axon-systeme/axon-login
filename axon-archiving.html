@@ -558,15 +558,23 @@ function loadArchiveList(){
   ]).then(([users, photos, invoices])=>{
     const userMap = {};
     users.forEach(u=>{ userMap[u.id] = u.full_name || u.email; });
+} else {
+          var itemsRowsHtml = '';
+          (item.invoice_items || []).forEach(it=>{
+            itemsRowsHtml += `<tr><td>${it.item_name}</td><td>${it.weight}</td><td>${it.unit_price}</td><td>${it.line_total}</td></tr>`;
+          });
+          var itemsRowsEscaped = itemsRowsHtml.replace(/'/g, "\\'");
 
-    const photoArr = Array.isArray(photos) ? photos.map(p=>({ ...p, _type:'photo' })) : [];
-    const invArr = Array.isArray(invoices) ? invoices.map(i=>({ ...i, _type:'invoice' })) : [];
-    const combined = [...photoArr, ...invArr].sort((a,b)=> new Date(b.created_at) - new Date(a.created_at));
-
-    if(combined.length === 0){
-      container.innerHTML = 'لا توجد عناصر مؤرشفة بعد.';
-      return;
-    }
+          html += `<div class="archive-item">`;
+          html += `<div class="head"><span>📝 فاتورة رقم ${item.invoice_number}</span><span>${date}</span></div>`;
+          html += `<div class="meta">المؤرشف: ${archiverNm}</div>`;
+          html += `<table><tr><th>المادة</th><th>الوزن/الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>`;
+          html += itemsRowsHtml;
+          html += `</table>`;
+          html += `<div class="meta" style="margin-top:6px;">الإجمالي الكلي: ${item.total_value}</div>`;
+          html += `<div><a href="javascript:void(0)" onclick='printInvoice("${item.invoice_number}", "${archiverNm}", "${date}", "${itemsRowsEscaped}", "${item.total_value}")'>عرض/طباعة</a></div>`;
+          html += `</div>`;
+        }
 
     let html = '';
     const signPromises = [];
