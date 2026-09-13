@@ -121,7 +121,7 @@ Promise.all([
 var signPromise = fetch(URL + "/storage/v1/object/sign/invoice-photos/" + p.image_path, {
         method: 'POST', headers: Object.assign({}, H, {"Content-Type": "application/json"}), body: JSON.stringify({ expiresIn: 3600 })
       }).then(function(r){ return r.json(); }).then(function(signData){
-        return { idx: idx, url: signData.signedURL, err: JSON.stringify(signData) };
+        return { idx: idx, url: "/storage/v1" + signData.signedURL, err: JSON.stringify(signData) };
       });
       signPromises.push(signPromise);
     });
