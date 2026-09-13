@@ -134,6 +134,35 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@10/dist/bundle/index.umd.min.js"></script>
 <script>
+  function printInvoice(invNumber, archiverNm, dateStr, itemsHtml, totalVal){
+  var win = window.open('', '_blank');
+  win.document.write(`
+    <html dir="rtl" lang="ar"><head><meta charset="UTF-8">
+    <style>
+      body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;padding:30px;color:#14171c;}
+      h1{text-align:center;font-size:1.4rem;margin-bottom:4px;}
+      .sub{text-align:center;color:#7d8493;margin-bottom:24px;}
+      table{width:100%;border-collapse:collapse;margin-bottom:20px;}
+      th,td{padding:8px;border:1px solid #ccc;text-align:right;}
+      th{background:#f0f0f0;}
+      .total{font-size:1.1rem;font-weight:bold;text-align:left;margin-bottom:24px;}
+      .footer{border-top:1px solid #ccc;padding-top:14px;font-size:0.85rem;color:#555;}
+    </style></head><body>
+    <h1>AXON — فاتورة رقم ${invNumber}</h1>
+    <div class="sub">التاريخ: ${dateStr}</div>
+    <table><tr><th>المادة</th><th>الوزن/الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>
+      ${itemsHtml}
+    </table>
+    <div class="total">الإجمالي الكلي: ${totalVal}</div>
+    <div class="footer">
+      المؤرشف: ${archiverNm}<br>
+      موثق ببصمة اليد — لا يمكن التعديل أو الحذف
+    </div>
+    <script>window.onload=function(){window.print();}<\/script>
+    </body></html>
+  `);
+  win.document.close();
+}
 function downloadPhoto(url){
   fetch(url).then(function(r){ return r.blob(); }).then(function(blob){
     var objUrl = (self.URL || self.webkitURL).createObjectURL(blob);
@@ -145,7 +174,35 @@ function downloadPhoto(url){
     document.body.removeChild(link);
   }).catch(function(e){ alert('تعذر التحميل: ' + e.message); });
 }
-
+function printInvoice(invNumber, archiverNm, dateStr, itemsHtml, totalVal){
+  var win = window.open('', '_blank');
+  win.document.write(`
+    <html dir="rtl" lang="ar"><head><meta charset="UTF-8">
+    <style>
+      body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;padding:30px;color:#14171c;}
+      h1{text-align:center;font-size:1.4rem;margin-bottom:4px;}
+      .sub{text-align:center;color:#7d8493;margin-bottom:24px;}
+      table{width:100%;border-collapse:collapse;margin-bottom:20px;}
+      th,td{padding:8px;border:1px solid #ccc;text-align:right;}
+      th{background:#f0f0f0;}
+      .total{font-size:1.1rem;font-weight:bold;text-align:left;margin-bottom:24px;}
+      .footer{border-top:1px solid #ccc;padding-top:14px;font-size:0.85rem;color:#555;}
+    </style></head><body>
+    <h1>AXON — فاتورة رقم ${invNumber}</h1>
+    <div class="sub">التاريخ: ${dateStr}</div>
+    <table><tr><th>المادة</th><th>الوزن/الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>
+      ${itemsHtml}
+    </table>
+    <div class="total">الإجمالي الكلي: ${totalVal}</div>
+    <div class="footer">
+      المؤرشف: ${archiverNm}<br>
+      موثق ببصمة اليد — لا يمكن التعديل أو الحذف
+    </div>
+    <script>window.onload=function(){window.print();}<\/script>
+    </body></html>
+  `);
+  win.document.close();
+}
 function printPhoto(url){
   var win = window.open('', '_blank');
   win.document.write('<img src="' + url + '" style="max-width:100%" onload="window.print()">');
@@ -530,17 +587,23 @@ function loadArchiveList(){
         }).then(r=>r.json()).then(signData=>({ idx, url: signData.signedURL }));
         signPromises.push(signPromise);
       } else {
-        html += `<div class="archive-item">`;
-        html += `<div class="head"><span>📝 فاتورة رقم ${item.invoice_number}</span><span>${date}</span></div>`;
-        html += `<div class="meta">المؤرشف: ${archiverNm}</div>`;
-        html += `<table><tr><th>المادة</th><th>الوزن/الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>`;
-        (item.invoice_items || []).forEach(it=>{
-          html += `<tr><td>${it.item_name}</td><td>${it.weight}</td><td>${it.unit_price}</td><td>${it.line_total}</td></tr>`;
-        });
-        html += `</table>`;
-        html += `<div class="meta" style="margin-top:6px;">الإجمالي الكلي: ${item.total_value}</div>`;
-        html += `</div>`;
-      }
+        } else {
+          var itemsRowsHtml = '';
+          (item.invoice_items || []).forEach(it=>{
+            itemsRowsHtml += `<tr><td>${it.item_name}</td><td>${it.weight}</td><td>${it.unit_price}</td><td>${it.line_total}</td></tr>`;
+          });
+          var itemsRowsEscaped = itemsRowsHtml.replace(/'/g, "\\'");
+
+          html += `<div class="archive-item">`;
+          html += `<div class="head"><span>📝 فاتورة رقم ${item.invoice_number}</span><span>${date}</span></div>`;
+          html += `<div class="meta">المؤرشف: ${archiverNm}</div>`;
+          html += `<table><tr><th>المادة</th><th>الوزن/الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>`;
+          html += itemsRowsHtml;
+          html += `</table>`;
+          html += `<div class="meta" style="margin-top:6px;">الإجمالي الكلي: ${item.total_value}</div>`;
+          html += `<div><a href="javascript:void(0)" onclick='printInvoice("${item.invoice_number}", "${archiverNm}", "${date}", "${itemsRowsEscaped}", "${item.total_value}")'>عرض/طباعة</a></div>`;
+          html += `</div>`;
+        }
     });
 
     container.innerHTML = html;
