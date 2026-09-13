@@ -130,7 +130,6 @@ var signPromise = fetch(URL + "/storage/v1/object/sign/invoice-photos/" + p.imag
 
   Promise.all(signPromises).then(function(signResults){
     signResults.forEach(function(sr){
-      var el = document.getElementById('photoImg' + sr.idx);
      var el = document.getElementById('photoImg' + sr.idx);
         if(sr.url){
           el.innerHTML = "<img src='" + URL + sr.url + "' style='max-width:100%;border-radius:8px;'>";
