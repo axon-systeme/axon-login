@@ -90,7 +90,6 @@ Promise.all([
   document.getElementById('invoicesArchive').innerHTML = "تعذر تحميل الأرشيف: " + e.message;
 });
 
-  });
   Promise.all([
   fetch(URL + "/rest/v1/accounts?select=id,name", { headers: H }).then(function(r){ return r.json(); }),
   fetch(URL + "/rest/v1/users?select=id,full_name,email", { headers: H }).then(function(r){ return r.json(); }),
