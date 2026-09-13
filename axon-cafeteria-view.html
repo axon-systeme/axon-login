@@ -132,7 +132,7 @@ var signPromise = fetch(URL + "/storage/v1/object/sign/invoice-photos/" + p.imag
     signResults.forEach(function(sr){
      var el = document.getElementById('photoImg' + sr.idx);
         if(sr.url){
-          el.innerHTML = "<img src='" + URL + sr.url + "' style='max-width:100%;border-radius:8px;'>";
+          el.innerHTML = "<img src='" + URL + sr.url + "' style='max-width:100%;border-radius:8px;' onerror=\"this.parentElement.innerHTML='فشل تحميل الصورة: ' + '" + URL + sr.url.replace(/'/g,"\\'") + "'\">";
         } else {
           el.textContent = "تعذر تحميل الصورة: " + sr.err;
         }
