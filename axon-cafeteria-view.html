@@ -119,7 +119,7 @@ Promise.all([
     html += "<div class='photo-wrap' id='photoImg" + idx + "'>جاري تحميل الصورة...</div>";
     html += "</div>";
 var signPromise = fetch(URL + "/storage/v1/object/sign/invoice-photos/" + p.image_path, {
-        method: 'POST', headers: H, body: JSON.stringify({ expiresIn: 3600 })
+        method: 'POST', headers: Object.assign({}, H, {"Content-Type": "application/json"}), body: JSON.stringify({ expiresIn: 3600 })
       }).then(function(r){ return r.json(); }).then(function(signData){
         return { idx: idx, url: signData.signedURL, err: JSON.stringify(signData) };
       });
