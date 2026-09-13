@@ -118,26 +118,25 @@ Promise.all([
     html += "<div class='invoice-meta'>المؤرشف: " + archiverName + (p.note ? " — " + p.note : "") + "</div>";
     html += "<div class='photo-wrap' id='photoImg" + idx + "'>جاري تحميل الصورة...</div>";
     html += "</div>";
-
-    var signPromise = fetch(URL + "/storage/v1/object/sign/invoice-photos/" + p.image_path, {
-      method: 'POST', headers: H, body: JSON.stringify({ expiresIn: 3600 })
-    }).then(function(r){ return r.json(); }).then(function(signData){
-      return { idx: idx, url: signData.signedURL };
+var signPromise = fetch(URL + "/storage/v1/object/sign/invoice-photos/" + p.image_path, {
+        method: 'POST', headers: H, body: JSON.stringify({ expiresIn: 3600 })
+      }).then(function(r){ return r.json(); }).then(function(signData){
+        return { idx: idx, url: signData.signedURL, err: JSON.stringify(signData) };
+      });
+      signPromises.push(signPromise);
     });
-    signPromises.push(signPromise);
-  });
 
-  container.innerHTML = html;
+    container.innerHTML = html;
 
   Promise.all(signPromises).then(function(signResults){
     signResults.forEach(function(sr){
       var el = document.getElementById('photoImg' + sr.idx);
-      if(sr.url){
-        el.innerHTML = "<img src='" + URL + sr.url + "' style='max-width:100%;border-radius:8px;'>";
-      } else {
-        el.textContent = "تعذر تحميل الصورة.";
-      }
-    });
+     var el = document.getElementById('photoImg' + sr.idx);
+        if(sr.url){
+          el.innerHTML = "<img src='" + URL + sr.url + "' style='max-width:100%;border-radius:8px;'>";
+        } else {
+          el.textContent = "تعذر تحميل الصورة: " + sr.err;
+        }
   });
 }).catch(function(e){
   document.getElementById('photoArchiveContainer').innerHTML = "تعذر تحميل الأرشيف بالصورة: " + e.message;
