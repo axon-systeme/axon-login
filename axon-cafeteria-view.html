@@ -90,35 +90,6 @@ Promise.all([
   document.getElementById('invoicesArchive').innerHTML = "تعذر تحميل الأرشيف: " + e.message;
 });
 
-  var container = document.getElementById('invoicesArchive');
-  if(!Array.isArray(invoices) || invoices.length === 0){
-    container.innerHTML = "لا توجد فواتير محفوظة بعد.";
-    return;
-  }
-
-  var html = "";
-  invoices.forEach(function(inv){
-    var accName = accMap[inv.account_id] || inv.account_id;
-    var personName = personMap[inv.archived_by] || inv.archived_by;
-    var date = inv.created_at ? new Date(inv.created_at).toLocaleDateString('ar') : "";
-
-    html += "<div class='invoice-card'>";
-    html += "<div class='invoice-head'><b>فاتورة رقم " + inv.invoice_number + "</b><span>" + date + "</span></div>";
-    html += "<div class='invoice-meta'>الحساب: " + accName + " — أمين المخزن: " + personName + "</div>";
-
-    html += "<table class='invoice-items-table'><tr><th>المادة</th><th>الوزن/الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>";
-    (inv.invoice_items || []).forEach(function(it){
-      html += "<tr><td>" + it.item_name + "</td><td>" + it.weight + "</td><td>" + it.unit_price + "</td><td>" + it.line_total + "</td></tr>";
-    });
-    html += "</table>";
-
-    html += "<div class='invoice-total'>الإجمالي الكلي: " + inv.total_value + "</div>";
-    html += "</div>";
-  });
-  container.innerHTML = html;
-}).catch(function(e){
-  document.getElementById('invoicesArchive').innerHTML = "تعذر تحميل الأرشيف: " + e.message;
-});
   });
   Promise.all([
   fetch(URL + "/rest/v1/accounts?select=id,name", { headers: H }).then(function(r){ return r.json(); }),
