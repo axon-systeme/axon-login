@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AXON — الأرشفة</title>
+<style>
+  :root{
+    --ink:#0f1420; --ink-2:#161d2e; --ink-3:#232c42;
+    --slate:#8a93a8; --white:#e8ebf3; --gold:#c9a15a; --green:#3fa66f; --err:#e07a6b;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--ink);color:var(--white);font-family:'Segoe UI',Tahoma,Arial,sans-serif;padding:20px 14px 80px;}
+  h1{text-align:center;font-size:1.3rem;margin:0 0 6px;}
+  h2{font-size:1.05rem;margin:28px auto 10px;max-width:600px;color:var(--gold);}
+  .card{background:var(--ink-2);border:1px solid var(--ink-3);border-radius:10px;padding:16px;margin-bottom:16px;max-width:600px;margin-left:auto;margin-right:auto;}
+  label{display:block;font-size:0.82rem;color:var(--slate);margin-bottom:6px;}
+  input, textarea{
+    width:100%;padding:10px;border-radius:8px;border:1px solid var(--ink-3);
+    background:var(--ink);color:var(--white);font-size:0.95rem;margin-bottom:14px;
+  }
+  .photo-box{
+    border:2px dashed var(--gold);border-radius:10px;padding:20px;text-align:center;
+    cursor:pointer;margin-bottom:14px;
+  }
+  .photo-box img{max-width:100%;border-radius:8px;margin-top:10px;}
+  .archiver-box{
+    background:var(--ink-3);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:0.85rem;
+  }
+  .archiver-box b{color:var(--gold);}
+  .fp-btn{
+    width:100%;padding:14px;border:none;border-radius:8px;
+    background:linear-gradient(135deg,#3b6fd6,#5a8ef0);color:#fff;
+    font-size:1rem;font-weight:600;cursor:pointer;
+  }
+  .fp-btn:disabled{opacity:0.5;}
+  .msg{text-align:center;padding:12px;border-radius:8px;margin-top:12px;font-size:0.9rem;display:none;}
+  .msg.ok{display:block;background:rgba(63,166,111,.15);color:#7bd6a4;}
+  .msg.err{display:block;background:rgba(224,122,107,.15);color:var(--err);}
+  .confirm-box{
+    background:var(--ink-3);border-radius:8px;padding:14px;margin-top:14px;font-size:0.85rem;line-height:1.8;
+  }
+  .archive-item{background:var(--ink-2);border:1px solid var(--ink-3);border-radius:10px;padding:14px;margin-bottom:12px;max-width:600px;margin-left:auto;margin-right:auto;font-size:0.9rem;}
+  .archive-item .head{display:flex;justify-content:space-between;font-weight:600;margin-bottom:6px;}
+  .archive-item .meta{color:var(--slate);font-size:0.82rem;margin-bottom:8px;}
+  .archive-item a, .archive-item span.act{color:#5b9bd5;margin-inline-end:16px;cursor:pointer;}
+  .account-name{text-align:center;color:var(--slate);margin-bottom:20px;}
+</style>
+</head>
+<body>
+
+<h1>AXON — الأرشفة</h1>
+<div class="account-name" id="accountNameLabel">جاري التحميل...</div>
+
+<div class="card">
+  <div class="archiver-box">
+    المؤرشف الحالي: <b id="archiverName">جاري التحميل...</b>
+  </div>
+
+  <label>صورة الفاتورة / الوثيقة</label>
+  <div class="photo-box" id="photoBox">
+    <span id="photoLabel">اضغط هنا لالتقاط أو اختيار صورة</span>
+    <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none">
+    <img id="photoPreview" style="display:none">
+  </div>
+
+  <label>ملاحظة (اختياري)</label>
+  <textarea id="noteInput" rows="2" placeholder="مثال: فاتورة مواد غذائية شهر 09"></textarea>
+
+  <button class="fp-btn" id="confirmBtn">🔒 تأكيد الأرشفة ببصمة اليد</button>
+  <div class="msg" id="msgBox"></div>
+</div>
+
+<h2>الأرشيف</h2>
+<div id="archiveList">جاري التحميل...</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@10/dist/bundle/index.umd.min.js"></script>
+<script>
+function downloadPhoto(url){
+  fetch(url).then(function(r){ return r.blob(); }).then(function(blob){
+    var objUrl = (self.URL || self.webkitURL).createObjectURL(blob);
+    var link = document.createElement('a');
+    link.href = objUrl;
+    link.download = 'وثيقة.jpg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }).catch(function(e){ alert('تعذر التحميل: ' + e.message); });
+}
+
+function printPhoto(url){
+  var win = window.open('', '_blank');
+  win.document.write('<img src="' + url + '" style="max-width:100%" onload="window.print()">');
+  win.document.close();
+}
+
+const SUPABASE_URL = "https://tmizzjieyeqbcxuxoucw.supabase.co";
+const ANON_KEY = "sb_publishable_0MXFCqGL0eqkteVozjLtDQ_VCmGeXhM";
+
+const REAL_SLUGS = {
+  "get-user-context": "bright-handler",
+  "login-biometric-options": "smart-endpoint",
+  "login-biometric-verify": "rapid-api"
+};
+function fn(name){
+  const slug = REAL_SLUGS[name] || name;
+  return `${SUPABASE_URL}/functions/v1/${slug}`;
+}
+function headers(){
+  return {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${ANON_KEY}`,
+    "apikey": ANON_KEY
+  };
+}
+
+const params = new URLSearchParams(window.location.search);
+const userId = params.get('uid') || sessionStorage.getItem('axon_user_id');
+const accountId = params.get('id');
+
+if(!userId){
+  window.location.href = "axon-portal.html";
+}
+if(!accountId){
+  document.getElementById('accountNameLabel').textContent = 'خطأ: لم يتم تحديد الحساب.';
+}
+
+let currentUserEmail = null;
+let selectedFile = null;
+
+async function loadArchiverInfo(){
+  try{
+    const res = await fetch(fn('get-user-context'), {
+      method:'POST', headers: headers(), body: JSON.stringify({ user_id: userId })
+    });
+    const data = await res.json();
+    if(data.success){
+      currentUserEmail = data.user.email;
+      document.getElementById('archiverName').textContent = data.user.full_name || data.user.email;
+    }
+  }catch(e){
+    document.getElementById('archiverName').textContent = 'تعذر التحميل';
+  }
+}
+loadArchiverInfo();
+
+async function loadAccountName(){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/accounts?id=eq.${accountId}&select=name`, { headers: headers() });
+    const data = await res.json();
+    document.getElementById('accountNameLabel').textContent = (data[0] && data[0].name) || 'حساب غير معروف';
+  }catch(e){
+    document.getElementById('accountNameLabel').textContent = 'تعذر تحميل اسم الحساب';
+  }
+}
+if(accountId) loadAccountName();
+
+document.getElementById('photoBox').addEventListener('click', ()=>{
+  document.getElementById('photoInput').click();
+});
+
+document.getElementById('photoInput').addEventListener('change', function(e){
+  selectedFile = e.target.files[0];
+  if(selectedFile){
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      document.getElementById('photoPreview').src = ev.target.result;
+      document.getElementById('photoPreview').style.display = 'block';
+      document.getElementById('photoLabel').textContent = 'اضغط لتغيير الصورة';
+    };
+    reader.readAsDataURL(selectedFile);
+  }
+});
+
+document.getElementById('confirmBtn').addEventListener('click', async function(){
+  const btn = this;
+  const msgBox = document.getElementById('msgBox');
+  msgBox.className = 'msg';
+
+  const note = document.getElementById('noteInput').value.trim();
+
+  if(!accountId){
+    msgBox.className = 'msg err';
+    msgBox.textContent = 'لم يتم تحديد الحساب.';
+    return;
+  }
+  if(!selectedFile){
+    msgBox.className = 'msg err';
+    msgBox.textContent = 'أضف صورة الفاتورة أولاً.';
+    return;
+  }
+  if(!currentUserEmail){
+    msgBox.className = 'msg err';
+    msgBox.textContent = 'تعذر التعرف على المستخدم الحالي. سجّل الدخول من جديد.';
+    return;
+  }
+  if(!window.PublicKeyCredential){
+    msgBox.className = 'msg err';
+    msgBox.textContent = 'هذا الجهاز/المتصفح لا يدعم البصمة (WebAuthn).';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'جاري التحقق من البصمة...';
+
+  try{
+    const optRes = await fetch(fn('login-biometric-options'), {
+      method:'POST', headers: headers(), body: JSON.stringify({ email: currentUserEmail })
+    });
+    const options = await optRes.json();
+    if(options.error){ throw new Error(options.error); }
+
+    const authResp = await SimpleWebAuthnBrowser.startAuthentication(options);
+
+    const verifyRes = await fetch(fn('login-biometric-verify'), {
+      method:'POST', headers: headers(),
+      body: JSON.stringify({ user_id: userId, assertion_response: authResp })
+    });
+    const verifyData = await verifyRes.json();
+    if(!verifyData.success){
+      throw new Error(verifyData.error || 'فشل التحقق من البصمة.');
+    }
+
+    btn.textContent = 'جاري رفع الصورة...';
+    const fileName = `${accountId}/${Date.now()}_${selectedFile.name}`;
+    const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/invoice-photos/${fileName}`, {
+      method:'POST',
+      headers: { "Authorization": `Bearer ${ANON_KEY}`, "apikey": ANON_KEY, "Content-Type": selectedFile.type },
+      body: selectedFile
+    });
+    if(!uploadRes.ok){
+      const errText = await uploadRes.text();
+      throw new Error('فشل رفع الصورة: ' + uploadRes.status + ' - ' + errText);
+    }
+
+    const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/photo_archive`, {
+      method:'POST',
+      headers: { ...headers(), "Prefer": "return=representation" },
+      body: JSON.stringify({
+        account_id: accountId,
+        archived_by: userId,
+        image_path: fileName,
+        note: note || null
+      })
+    });
+    const insertData = await insertRes.json();
+    if(!Array.isArray(insertData) || insertData.length === 0){
+      throw new Error('فشل تسجيل الأرشفة.');
+    }
+
+    const savedAt = new Date(insertData[0].created_at);
+    msgBox.className = 'msg ok';
+    msgBox.innerHTML = `تمت الأرشفة بنجاح ✅
+      <div class="confirm-box">
+        المؤرشف: ${currentUserEmail}<br>
+        الوقت: ${savedAt.toLocaleTimeString('ar')}<br>
+        التاريخ: ${savedAt.toLocaleDateString('ar')}<br>
+        لا يمكن تعديل أو حذف هذا السجل نهائيًا.
+      </div>`;
+
+    selectedFile = null;
+    document.getElementById('photoPreview').style.display = 'none';
+    document.getElementById('photoLabel').textContent = 'اضغط هنا لالتقاط أو اختيار صورة';
+    document.getElementById('noteInput').value = '';
+
+    loadArchiveList();
+
+  }catch(e){
+    msgBox.className = 'msg err';
+    msgBox.textContent = 'خطأ: ' + e.message;
+  }finally{
+    btn.disabled = false;
+    btn.textContent = '🔒 تأكيد الأرشفة ببصمة اليد';
+  }
+});
+
+function loadArchiveList(){
+  const container = document.getElementById('archiveList');
+  if(!accountId){ container.innerHTML = ''; return; }
+
+  Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/users?select=id,full_name,email`, { headers: headers() }).then(r=>r.json()),
+    fetch(`${SUPABASE_URL}/rest/v1/photo_archive?account_id=eq.${accountId}&select=*&order=created_at.desc`, { headers: headers() }).then(r=>r.json())
+  ]).then(([users, photos])=>{
+    const userMap = {};
+    users.forEach(u=>{ userMap[u.id] = u.full_name || u.email; });
+
+    if(!Array.isArray(photos) || photos.length === 0){
+      container.innerHTML = 'لا توجد عناصر مؤرشفة بعد.';
+      return;
+    }
+
+    let html = '';
+    const signPromises = [];
+
+    photos.forEach((p, idx)=>{
+      const archiverNm = userMap[p.archived_by] || p.archived_by;
+      const date = p.created_at ? new Date(p.created_at).toLocaleString('ar') : '';
+
+      html += `<div class="archive-item" id="archItem${idx}">`;
+      html += `<div class="head"><span>${date}</span></div>`;
+      html += `<div class="meta">المؤرشف: ${archiverNm}${p.note ? ' — ' + p.note : ''}</div>`;
+      html += `<div id="archAct${idx}">جاري تحميل الرابط...</div>`;
+      html += `</div>`;
+
+      const signPromise = fetch(`${SUPABASE_URL}/storage/v1/object/sign/invoice-photos/${p.image_path}`, {
+        method:'POST', headers: headers(), body: JSON.stringify({ expiresIn: 3600 })
+      }).then(r=>r.json()).then(signData=>({ idx, url: signData.signedURL }));
+      signPromises.push(signPromise);
+    });
+
+    container.innerHTML = html;
+
+    Promise.all(signPromises).then(results=>{
+      results.forEach(r=>{
+        const el = document.getElementById('archAct' + r.idx);
+        if(r.url){
+          const fullUrl = SUPABASE_URL + "/storage/v1" + r.url;
+          el.innerHTML = `<a href="${fullUrl}" target="_blank">عرض</a><span class="act" onclick='downloadPhoto("${fullUrl}")'>تحميل</span><span class="act" onclick='printPhoto("${fullUrl}")'>طباعة</span>`;
+        } else {
+          el.textContent = 'تعذر تحميل الرابط.';
+        }
+      });
+    });
+  }).catch(e=>{
+    container.innerHTML = 'تعذر تحميل الأرشيف: ' + e.message;
+  });
+}
+loadArchiveList();
+</script>
+
+</body>
+</html>
