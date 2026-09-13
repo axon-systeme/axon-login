@@ -27,7 +27,6 @@ th{color:#8a93a8;}
 <div id="photoArchiveContainer">جاري التحميل...</div>
  <script>
 function downloadPhoto(url){
-  function downloadPhoto(url){
   fetch(url).then(function(r){ return r.blob(); }).then(function(blob){
     var blobUrl = (window.webkitURL || window.URL);
     blobUrl = blobUrl.createObjectURL ? blobUrl.createObjectURL(blob) : window.URL.createObjectURL(blob);
