@@ -335,14 +335,14 @@ document.getElementById('btnGoArchive').addEventListener('click', ()=>{
   window.location.href = 'axon-archiving.html?id=' + accId;
 });
 loadUserContext().then(()=>{
+  loadArchiveAccounts();
   if(currentOrgType === 'company'){
-   document.getElementById('cardPhotoArchive').style.display = 'block'; 
     document.getElementById('cardProtectedAccounts').style.display = 'block';
     document.getElementById('cardAddEmployee').style.display = '';
     document.getElementById('cardEmployeesList').style.display = '';
     document.getElementById('cardHomeEmpty').style.display = 'none';
     loadEmployees();
-        loadProtectedAccounts();
+    loadProtectedAccounts();
   }
 });
 
