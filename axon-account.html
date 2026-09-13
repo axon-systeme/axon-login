@@ -158,15 +158,6 @@
       <button class="btn" id="btnAddAccount" style="width:100%;">+ إضافة حساب محمي</button>
     </div>
   </div>
-<div class="card" id="cardPhotoArchive" style="display:none;">
-  <h2>الأرشفة</h2>
-  <div class="sub">صور الوثائق وأرشفها ببصمة اليد.</div>
-  <label style="display:block;font-size:0.82rem;color:var(--slate);margin-bottom:6px;">اختر الحساب</label>
-  <select id="archiveAccountSelect" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--ink-3);background:var(--ink);color:var(--white);font-size:0.95rem;margin-bottom:10px;">
-    <option value="">جاري تحميل الحسابات...</option>
-  </select>
-  <button class="btn" id="btnGoArchive" style="width:100%;margin-top:4px;">📷 الذهاب للأرشفة</button>
-</div>
   <div class="card" id="cardHomeEmpty">
     <h2>الرئيسية</h2>
     <div class="sub">هذا القسم مخصص لمؤسسات الشركات فقط</div>
@@ -352,7 +343,6 @@ loadUserContext().then(()=>{
     document.getElementById('cardHomeEmpty').style.display = 'none';
     loadEmployees();
         loadProtectedAccounts();
-        loadArchiveAccounts();
   }
 });
 
