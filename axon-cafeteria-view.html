@@ -25,7 +25,27 @@ th{color:#8a93a8;}
 <div id="invoicesArchive">جاري التحميل...</div>
 <h2>أرشيف الفواتير بالصورة</h2>
 <div id="photoArchiveContainer">جاري التحميل...</div>
-  
+ <script>
+function downloadPhoto(url){
+  fetch(url).then(function(r){ return r.blob(); }).then(function(blob){
+    var link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.download = 'فاتورة.jpg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }).catch(function(e){ alert('تعذر التحميل: ' + e.message); });
+}
+
+function printPhoto(url){
+  var win = window.open('', '_blank');
+  win.document.write('<img src="' + url + '" style="max-width:100%" onload="window.print()">');
+  win.document.close();
+}
+
+var URL = "https://tmizzjieyeqbcxuxoucw.supabase.co";
+var KEY = "sb_publishable_0MXFCqGL0eqkteVozjLtDQ_VCmGeXhM";
+... 
 <script>
 var URL = "https://tmizzjieyeqbcxuxoucw.supabase.co";
 var KEY = "sb_publishable_0MXFCqGL0eqkteVozjLtDQ_VCmGeXhM";
@@ -133,7 +153,9 @@ var signPromise = fetch(URL + "/storage/v1/object/sign/invoice-photos/" + p.imag
      var el = document.getElementById('photoImg' + sr.idx);
         if(sr.url){
               var fullUrl = URL + sr.url;
-              el.innerHTML = "<a href='" + fullUrl + "' target='_blank' style='color:#5b9bd5;margin-inline-end:16px;'>عرض</a><a href='" + fullUrl + "' download='فاتورة.jpg' style='color:#5b9bd5;'>تحميل</a>";
+              el.innerHTML = "<a href='" + fullUrl + "' target='_blank' style='color:#5b9bd5;margin-inline-end:16px;'>عرض</a>" +
+                "<span onclick='downloadPhoto(\"" + fullUrl + "\")' style='color:#5b9bd5;cursor:pointer;margin-inline-end:16px;'>تحميل</span>" +
+                "<span onclick='printPhoto(\"" + fullUrl + "\")' style='color:#5b9bd5;cursor:pointer;'>طباعة</span>";
             } else {
               el.innerHTML = "تعذر تحميل الصورة: " + sr.err;
             }
