@@ -132,9 +132,9 @@ var signPromise = fetch(URL + "/storage/v1/object/sign/invoice-photos/" + p.imag
     signResults.forEach(function(sr){
      var el = document.getElementById('photoImg' + sr.idx);
         if(sr.url){
-          el.innerHTML = "<img src='" + URL + sr.url + "' style='max-width:100%;border-radius:8px;' onerror=\"this.parentElement.innerHTML='فشل تحميل الصورة: ' + '" + URL + sr.url.replace(/'/g,"\\'") + "'\">";
+          el.innerHTML = "<img src='" + URL + sr.url + "' style='max-width:100%;border-radius:8px;' onerror=\"this.outerHTML='<a href=\\'" + URL + sr.url + "\\' target=_blank style=color:#5b9bd5>فشل التحميل — اضغط هنا لفتح الصورة مباشرة</a>'\">";
         } else {
-          el.textContent = "تعذر تحميل الصورة: " + sr.err;
+          el.innerHTML = "تعذر تحميل الصورة: " + sr.err + "<br><a href='" + URL + sr.url + "' target='_blank' style='color:#5b9bd5;word-break:break-all;'>افتح الصورة مباشرة</a>";
         }
       });
   });
