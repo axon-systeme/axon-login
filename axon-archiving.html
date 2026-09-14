@@ -560,6 +560,7 @@ function loadArchiveList(){
   ]).then(([users, photos, invoices])=>{
     const userMap = {};
     users.forEach(u=>{ userMap[u.id] = u.full_name || u.email; });
+    alert('invoices: ' + JSON.stringify(invoices));
 const photoArr = Array.isArray(photos) ? photos.map(p=>({ ...p, _type:'photo' })) : [];
 const invArr = Array.isArray(invoices) ? invoices.map(i=>({ ...i, _type:'invoice' })) : [];
 const combined = [...photoArr, ...invArr].sort((a,b)=> new Date(b.created_at) - new Date(a.created_at));
