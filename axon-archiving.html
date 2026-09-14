@@ -594,7 +594,6 @@ function loadArchiveList(){
           method:'POST', headers: headers(), body: JSON.stringify({ expiresIn: 3600 })
         }).then(r=>r.json()).then(signData=>({ idx, url: signData.signedURL }));
         signPromises.push(signPromise);
-      } else {
         } else {
           var itemsRowsHtml = '';
           (item.invoice_items || []).forEach(it=>{
