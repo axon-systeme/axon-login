@@ -556,11 +556,10 @@ function loadArchiveList(){
   Promise.all([
     fetch(`${SUPABASE_URL}/rest/v1/users?select=id,full_name,email`, { headers: headers() }).then(r=>r.json()),
     fetch(`${SUPABASE_URL}/rest/v1/photo_archive?account_id=eq.${accountId}&select=*&order=created_at.desc`, { headers: headers() }).then(r=>r.json()),
-    fetch(`${SUPABASE_URL}/rest/v1/invoices?account_id=eq.${accountId}&select=*,invoice_items(*)&order=created_at.desc`, { headers: headers() }).then(r=>r.json())
+    fetch(`${SUPABASE_URL}/rest/v1/invoices?account_id=eq.${accountId}&select=*,invoice_items(*)&order=archived_at.desc`, { headers: headers() }).then(r=>r.json())
   ]).then(([users, photos, invoices])=>{
     const userMap = {};
     users.forEach(u=>{ userMap[u.id] = u.full_name || u.email; });
-    alert('invoices: ' + JSON.stringify(invoices));
 const photoArr = Array.isArray(photos) ? photos.map(p=>({ ...p, _type:'photo' })) : [];
 const invArr = Array.isArray(invoices) ? invoices.map(i=>({ ...i, _type:'invoice' })) : [];
 const combined = [...photoArr, ...invArr].sort((a,b)=> new Date(b.created_at) - new Date(a.created_at));
@@ -575,7 +574,7 @@ if(combined.length === 0){
 
     combined.forEach((item, idx)=>{
       const archiverNm = userMap[item.archived_by] || item.archived_by;
-      const date = item.created_at ? new Date(item.created_at).toLocaleString('ar') : '';
+      const date = (item.created_at || item.archived_at) ? new Date(item.created_at || item.archived_at).toLocaleString('ar') : '';
 
       if(item._type === 'photo'){
         html += `<div class="archive-item" id="archItem${idx}">`;
