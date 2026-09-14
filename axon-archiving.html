@@ -97,12 +97,17 @@
 
 <div class="card" id="photoModeCard">
   <label>صورة الفاتورة / الوثيقة</label>
-  <div class="photo-box" id="photoBox">
-    <span id="photoLabel">اضغط هنا لالتقاط أو اختيار صورة</span>
-    <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none">
+ <div class="photo-box" id="photoBox">
+    <span id="photoLabel">اختر طريقة إضافة الصورة</span>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;">
+      <button type="button" id="cameraBtn" class="mode-btn" style="flex:1;">📷 التقط صورة</button>
+      <button type="button" id="galleryBtn" class="mode-btn" style="flex:1;">🖼️ من المعرض</button>
+    </div>
+    <input type="file" id="photoInputCamera" accept="image/*" capture="environment" style="display:none">
+    <input type="file" id="photoInputGallery" accept="image/*" style="display:none">
     <img id="photoPreview" style="display:none">
-  </div>
-
+  </div> 
+  
   <label>ملاحظة (اختياري)</label>
   <textarea id="noteInput" rows="2" placeholder="مثال: فاتورة مواد غذائية شهر 09"></textarea>
 
@@ -285,22 +290,29 @@ async function loadAccountName(){
 }
 if(accountId) loadAccountName();
 
-document.getElementById('photoBox').addEventListener('click', ()=>{
-  document.getElementById('photoInput').click();
+document.getElementById('cameraBtn').addEventListener('click', function(e){
+  e.stopPropagation();
+  document.getElementById('photoInputCamera').click();
+});
+document.getElementById('galleryBtn').addEventListener('click', function(e){
+  e.stopPropagation();
+  document.getElementById('photoInputGallery').click();
 });
 
-document.getElementById('photoInput').addEventListener('change', function(e){
+function handlePhotoSelect(e){
   selectedFile = e.target.files[0];
   if(selectedFile){
     const reader = new FileReader();
     reader.onload = function(ev){
       document.getElementById('photoPreview').src = ev.target.result;
       document.getElementById('photoPreview').style.display = 'block';
-      document.getElementById('photoLabel').textContent = 'اضغط لتغيير الصورة';
+      document.getElementById('photoLabel').textContent = 'تم اختيار الصورة — اضغط أي زر لتغييرها';
     };
     reader.readAsDataURL(selectedFile);
   }
-});
+}
+document.getElementById('photoInputCamera').addEventListener('change', handlePhotoSelect);
+document.getElementById('photoInputGallery').addEventListener('change', handlePhotoSelect);
 
 async function doBiometricCheck(){
   if(!currentUserEmail){
