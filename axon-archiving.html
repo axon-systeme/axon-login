@@ -208,7 +208,38 @@ function printPhoto(url){
   win.document.write('<img src="' + url + '" style="max-width:100%" onload="window.print()">');
   win.document.close();
 }
-
+function downloadInvoice(invNumber, archiverNm, dateStr, itemsHtml, totalVal){
+  var htmlContent = `<html dir="rtl" lang="ar"><head><meta charset="UTF-8">
+    <style>
+      body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;padding:30px;color:#14171c;}
+      h1{text-align:center;font-size:1.4rem;margin-bottom:4px;}
+      .sub{text-align:center;color:#7d8493;margin-bottom:24px;}
+      table{width:100%;border-collapse:collapse;margin-bottom:20px;}
+      th,td{padding:8px;border:1px solid #ccc;text-align:right;}
+      th{background:#f0f0f0;}
+      .total{font-size:1.1rem;font-weight:bold;text-align:left;margin-bottom:24px;}
+      .footer{border-top:1px solid #ccc;padding-top:14px;font-size:0.85rem;color:#555;}
+    </style></head><body>
+    <h1>AXON — فاتورة رقم ${invNumber}</h1>
+    <div class="sub">التاريخ: ${dateStr}</div>
+    <table><tr><th>المادة</th><th>الوزن/الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>
+      ${itemsHtml}
+    </table>
+    <div class="total">الإجمالي الكلي: ${totalVal}</div>
+    <div class="footer">
+      المؤرشف: ${archiverNm}<br>
+      موثق ببصمة اليد — لا يمكن التعديل أو الحذف
+    </div>
+    </body></html>`;
+  var blob = new Blob([htmlContent], { type: 'text/html' });
+  var objUrl = (self.URL || self.webkitURL).createObjectURL(blob);
+  var link = document.createElement('a');
+  link.href = objUrl;
+  link.download = 'فاتورة-' + invNumber + '.html';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
 const SUPABASE_URL = "https://tmizzjieyeqbcxuxoucw.supabase.co";
 const ANON_KEY = "sb_publishable_0MXFCqGL0eqkteVozjLtDQ_VCmGeXhM";
 
@@ -558,23 +589,14 @@ function loadArchiveList(){
   ]).then(([users, photos, invoices])=>{
     const userMap = {};
     users.forEach(u=>{ userMap[u.id] = u.full_name || u.email; });
-} else {
-          var itemsRowsHtml = '';
-          (item.invoice_items || []).forEach(it=>{
-            itemsRowsHtml += `<tr><td>${it.item_name}</td><td>${it.weight}</td><td>${it.unit_price}</td><td>${it.line_total}</td></tr>`;
-          });
-          var itemsRowsEscaped = itemsRowsHtml.replace(/'/g, "\\'");
+const photoArr = Array.isArray(photos) ? photos.map(p=>({ ...p, _type:'photo' })) : [];
+const invArr = Array.isArray(invoices) ? invoices.map(i=>({ ...i, _type:'invoice' })) : [];
+const combined = [...photoArr, ...invArr].sort((a,b)=> new Date(b.created_at) - new Date(a.created_at));
 
-          html += `<div class="archive-item">`;
-          html += `<div class="head"><span>📝 فاتورة رقم ${item.invoice_number}</span><span>${date}</span></div>`;
-          html += `<div class="meta">المؤرشف: ${archiverNm}</div>`;
-          html += `<table><tr><th>المادة</th><th>الوزن/الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>`;
-          html += itemsRowsHtml;
-          html += `</table>`;
-          html += `<div class="meta" style="margin-top:6px;">الإجمالي الكلي: ${item.total_value}</div>`;
-          html += `<div><a href="javascript:void(0)" onclick='printInvoice("${item.invoice_number}", "${archiverNm}", "${date}", "${itemsRowsEscaped}", "${item.total_value}")'>عرض/طباعة</a></div>`;
-          html += `</div>`;
-        }
+if(combined.length === 0){
+  container.innerHTML = 'لا توجد عناصر مؤرشفة بعد.';
+  return;
+}
 
     let html = '';
     const signPromises = [];
@@ -608,7 +630,7 @@ function loadArchiveList(){
           html += itemsRowsHtml;
           html += `</table>`;
           html += `<div class="meta" style="margin-top:6px;">الإجمالي الكلي: ${item.total_value}</div>`;
-          html += `<div><a href="javascript:void(0)" onclick='printInvoice("${item.invoice_number}", "${archiverNm}", "${date}", "${itemsRowsEscaped}", "${item.total_value}")'>عرض/طباعة</a></div>`;
+          html += `<div><a href="javascript:void(0)" onclick='printInvoice("${item.invoice_number}", "${archiverNm}", "${date}", "${itemsRowsEscaped}", "${item.total_value}")'>عرض/طباعة</a><span class="act" onclick='downloadInvoice("${item.invoice_number}", "${archiverNm}", "${date}", "${itemsRowsEscaped}", "${item.total_value}")'>تحميل</span></div>`;
           html += `</div>`;
         }
     });
