@@ -138,6 +138,7 @@
 <div id="archiveList">جاري التحميل...</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@10/dist/bundle/index.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 function downloadPhoto(url){
   fetch(url).then(function(r){ return r.blob(); }).then(function(blob){
@@ -185,36 +186,48 @@ function printPhoto(url){
   win.document.close();
 }
 function downloadInvoice(invNumber, archiverNm, dateStr, itemsHtml, totalVal){
-  var htmlContent = `<html dir="rtl" lang="ar"><head><meta charset="UTF-8">
-    <style>
-      body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;padding:30px;color:#14171c;}
-      h1{text-align:center;font-size:1.4rem;margin-bottom:4px;}
-      .sub{text-align:center;color:#7d8493;margin-bottom:24px;}
-      table{width:100%;border-collapse:collapse;margin-bottom:20px;}
-      th,td{padding:8px;border:1px solid #ccc;text-align:right;}
-      th{background:#f0f0f0;}
-      .total{font-size:1.1rem;font-weight:bold;text-align:left;margin-bottom:24px;}
-      .footer{border-top:1px solid #ccc;padding-top:14px;font-size:0.85rem;color:#555;}
-    </style></head><body>
-    <h1>AXON — فاتورة رقم ${invNumber}</h1>
-    <div class="sub">التاريخ: ${dateStr}</div>
-    <table><tr><th>المادة</th><th>الوزن/الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>
-      ${itemsHtml}
+  var wrapper = document.createElement('div');
+  wrapper.style.position = 'fixed';
+  wrapper.style.left = '-9999px';
+  wrapper.style.top = '0';
+  wrapper.style.width = '600px';
+  wrapper.style.background = '#ffffff';
+  wrapper.style.color = '#14171c';
+  wrapper.style.fontFamily = "'Segoe UI',Tahoma,Arial,sans-serif";
+  wrapper.style.padding = '30px';
+  wrapper.dir = 'rtl';
+  wrapper.lang = 'ar';
+  wrapper.innerHTML = `
+    <h1 style="text-align:center;font-size:1.4rem;margin-bottom:4px;">AXON — فاتورة رقم ${invNumber}</h1>
+    <div style="text-align:center;color:#7d8493;margin-bottom:24px;">التاريخ: ${dateStr}</div>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+      <tr><th style="padding:8px;border:1px solid #ccc;text-align:right;background:#f0f0f0;">المادة</th><th style="padding:8px;border:1px solid #ccc;text-align:right;background:#f0f0f0;">الوزن/الكمية</th><th style="padding:8px;border:1px solid #ccc;text-align:right;background:#f0f0f0;">سعر الوحدة</th><th style="padding:8px;border:1px solid #ccc;text-align:right;background:#f0f0f0;">الإجمالي</th></tr>
+      ${itemsHtml.replace(/<td>/g, '<td style="padding:8px;border:1px solid #ccc;text-align:right;">')}
     </table>
-    <div class="total">الإجمالي الكلي: ${totalVal}</div>
-    <div class="footer">
+    <div style="font-size:1.1rem;font-weight:bold;text-align:left;margin-bottom:24px;">الإجمالي الكلي: ${totalVal}</div>
+    <div style="border-top:1px solid #ccc;padding-top:14px;font-size:0.85rem;color:#555;">
       المؤرشف: ${archiverNm}<br>
       موثق ببصمة اليد — لا يمكن التعديل أو الحذف
     </div>
-    </body></html>`;
-  var blob = new Blob([htmlContent], { type: 'text/html' });
-  var objUrl = (self.URL || self.webkitURL).createObjectURL(blob);
-  var link = document.createElement('a');
-  link.href = objUrl;
-  link.download = 'فاتورة-' + invNumber + '.html';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  `;
+  document.body.appendChild(wrapper);
+
+  html2canvas(wrapper, { backgroundColor: '#ffffff', scale: 2 }).then(function(canvas){
+    canvas.toBlob(function(blob){
+      var objUrl = (self.URL || self.webkitURL).createObjectURL(blob);
+      var link = document.createElement('a');
+      link.href = objUrl;
+      link.download = 'فاتورة-' + invNumber + '.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      document.body.removeChild(wrapper);
+    }, 'image/png');
+  }).catch(function(e){
+    document.body.removeChild(wrapper);
+    alert('تعذر تحميل الفاتورة كصورة: ' + e.message);
+  });
+}
 }
 const SUPABASE_URL = "https://tmizzjieyeqbcxuxoucw.supabase.co";
 const ANON_KEY = "sb_publishable_0MXFCqGL0eqkteVozjLtDQ_VCmGeXhM";
