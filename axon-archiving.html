@@ -403,8 +403,6 @@ document.getElementById('confirmBtn').addEventListener('click', async function()
       throw new Error('فشل تسجيل الأرشفة.');
     }
 
-    const savedAt = new Date(insertData[0].created_at); 
-
     const savedAt = new Date(insertData[0].created_at);
     msgBox.className = 'msg ok';
     msgBox.innerHTML = `تمت الأرشفة بنجاح ✅
