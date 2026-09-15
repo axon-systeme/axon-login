@@ -234,7 +234,8 @@ const ANON_KEY = "sb_publishable_0MXFCqGL0eqkteVozjLtDQ_VCmGeXhM";
 const REAL_SLUGS = {
   "get-user-context": "bright-handler",
   "login-biometric-options": "smart-endpoint",
-  "login-biometric-verify": "rapid-api"
+  "login-biometric-verify": "rapid-api",
+  "save-invoice-archive": "save-invouce-archive"
 };
 function fn(name){
   const slug = REAL_SLUGS[name] || name;
@@ -387,7 +388,7 @@ document.getElementById('confirmBtn').addEventListener('click', async function()
       throw new Error('فشل رفع الصورة: ' + uploadRes.status + ' - ' + errText);
     }
 
-    const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/photo_archive`, {
+   const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/photo_archive`, {
       method:'POST',
       headers: { ...headers(), "Prefer": "return=representation" },
       body: JSON.stringify({
@@ -401,6 +402,8 @@ document.getElementById('confirmBtn').addEventListener('click', async function()
     if(!Array.isArray(insertData) || insertData.length === 0){
       throw new Error('فشل تسجيل الأرشفة.');
     }
+
+    const savedAt = new Date(insertData[0].created_at); 
 
     const savedAt = new Date(insertData[0].created_at);
     msgBox.className = 'msg ok';
@@ -525,28 +528,21 @@ document.getElementById('confirmFormBtn').addEventListener('click', async functi
 
     btn.textContent = 'جاري الحفظ...';
 
-    const invRes = await fetch(`${SUPABASE_URL}/rest/v1/invoices`, {
+    const invRes = await fetch(fn('save-invoice-archive'), {
       method: 'POST',
-      headers: { ...headers(), "Prefer": "return=representation" },
+      headers: headers(),
       body: JSON.stringify({
+        user_id: userId,
         account_id: accountId,
         invoice_number: invoiceNumber,
-        archived_by: userId,
+        items: items,
         total_value: totalValue
       })
     });
-    const invData = await invRes.json();
-    if(!Array.isArray(invData) || invData.length === 0){
-      throw new Error('فشل إنشاء الفاتورة: ' + JSON.stringify(invData));
+    const invJson = await invRes.json();
+    if(!invJson.success){
+      throw new Error(invJson.error || 'فشل إنشاء الفاتورة.');
     }
-    const invoiceId = invData[0].id;
-
-    const itemsPayload = items.map(it => ({ ...it, invoice_id: invoiceId }));
-    const itemsRes = await fetch(`${SUPABASE_URL}/rest/v1/invoice_items`, {
-      method: 'POST',
-      headers: headers(),
-      body: JSON.stringify(itemsPayload)
-    });
     if(!itemsRes.ok){
       const errText = await itemsRes.text();
       throw new Error('فشل حفظ البنود: ' + errText);
@@ -577,11 +573,16 @@ function loadArchiveList(){
   const container = document.getElementById('archiveList');
   if(!accountId){ container.innerHTML = ''; return; }
 
-  Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/users?select=id,full_name,email`, { headers: headers() }).then(r=>r.json()),
-    fetch(`${SUPABASE_URL}/rest/v1/photo_archive?account_id=eq.${accountId}&select=*&order=created_at.desc`, { headers: headers() }).then(r=>r.json()),
-    fetch(`${SUPABASE_URL}/rest/v1/invoices?account_id=eq.${accountId}&select=*,invoice_items(*)&order=archived_at.desc`, { headers: headers() }).then(r=>r.json())
-  ]).then(([users, photos, invoices])=>{
+  fetch(fn('get-archive-data'), {
+    method:'POST', headers: headers(), body: JSON.stringify({ user_id: userId, account_id: accountId })
+  }).then(r=>r.json()).then(function(data){
+    if(!data.success){
+      container.innerHTML = 'تعذر تحميل الأرشيف: ' + (data.error || 'خطأ غير معروف');
+      return;
+    }
+    const users = data.users;
+    const photos = data.photos;
+    const invoices = data.invoices;
     const userMap = {};
     users.forEach(u=>{ userMap[u.id] = u.full_name || u.email; });
 const photoArr = Array.isArray(photos) ? photos.map(p=>({ ...p, _type:'photo' })) : [];
