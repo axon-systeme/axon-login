@@ -367,6 +367,44 @@ document.getElementById('btnGoArchive').addEventListener('click', ()=>{
   if(!accId){ alert('اختر الحساب أولاً.'); return; }
   window.location.href = 'axon-archiving.html?id=' + accId;
 });
+  document.getElementById('btnAddArchiveAccount').addEventListener('click', async ()=>{
+  const name = document.getElementById('newArchiveAccName').value.trim();
+  const account_type = document.getElementById('newArchiveAccType').value.trim();
+  const msgEl = document.getElementById('msgArchiveAccount');
+
+  if(!name){
+    msgEl.textContent = 'اسم الحساب مطلوب.';
+    msgEl.className = 'msg show err';
+    return;
+  }
+
+  const btn = document.getElementById('btnAddArchiveAccount');
+  btn.disabled = true; btn.textContent = 'جاري الإضافة...';
+
+  try{
+    const res = await fetch(fnCtx('archive-account-create'), {
+      method:'POST', headers: headers(),
+      body: JSON.stringify({ requesting_user_id: userId, name, account_type: account_type || null })
+    });
+    const data = await res.json();
+
+    if(data.success){
+      document.getElementById('newArchiveAccName').value = '';
+      document.getElementById('newArchiveAccType').value = '';
+      msgEl.textContent = 'تمت إضافة الحساب بنجاح.';
+      msgEl.className = 'msg show ok';
+      loadArchiveAccounts();
+    }else{
+      msgEl.textContent = data.error || 'تعذر إضافة الحساب.';
+      msgEl.className = 'msg show err';
+    }
+  }catch(e){
+    msgEl.textContent = 'تعذر الاتصال بالسيرفر.';
+    msgEl.className = 'msg show err';
+  }finally{
+    btn.disabled = false; btn.textContent = '+ إضافة حساب أرشفة';
+  }
+});
 loadUserContext().then(()=>{
   loadArchiveAccounts();
   if(currentOrgType === 'company'){
