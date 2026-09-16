@@ -298,7 +298,7 @@ if(!userId){
 }
 
 document.getElementById('avatarLetter').textContent = '?';
-const REAL_SLUGS_CTX = { "get-user-context": "bright-handler", "protected-accounts-list": "smooth-endpoint", "protected-account-create": "steady-worker", "employees-manage": "super-action", "message-manage": "smart-processor" };
+const REAL_SLUGS_CTX = { "get-user-context": "bright-handler", "protected-accounts-list": "smooth-endpoint", "protected-account-create": "steady-worker", "employees-manage": "super-action", "message-manage": "smart-processor", "archive-accounts-list": "swift-task", "archive-account-create": "hyper-task" };
 function fnCtx(name){ return `${SUPABASE_URL}/functions/v1/${REAL_SLUGS_CTX[name] || name}`; }
 
 let currentOrgType = null;
