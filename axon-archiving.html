@@ -388,17 +388,22 @@ document.getElementById('confirmBtn').addEventListener('click', async function()
       throw new Error('فشل رفع الصورة: ' + uploadRes.status + ' - ' + errText);
     }
 
-   const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/photo_archive`, {
+   const insertRes = await fetch(fn('save-photo-archive'), {
       method:'POST',
-      headers: { ...headers(), "Prefer": "return=representation" },
+      headers: headers(),
       body: JSON.stringify({
+        user_id: userId,
         account_id: accountId,
-        archived_by: userId,
         image_path: fileName,
         note: note || null
       })
     });
-    const insertData = await insertRes.json();
+    const insertJson = await insertRes.json();
+    if(!insertJson.success){
+      throw new Error(insertJson.error || 'فشل تسجيل الأرشفة.');
+    }
+
+    const savedAt = new Date(insertJson.record.created_at);
     if(!Array.isArray(insertData) || insertData.length === 0){
       throw new Error('فشل تسجيل الأرشفة.');
     }
