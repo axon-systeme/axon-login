@@ -327,11 +327,17 @@ async function loadUserContext(){
   }catch(e){ document.body.insertAdjacentHTML('afterbegin', `<div style="background:darkred;color:white;padding:10px;font-size:13px;">CATCH ERROR: ${e.message}</div>`); }
 }
 function loadArchiveAccounts(){
-  fetch(`${SUPABASE_URL}/rest/v1/accounts?select=id,name`, { headers: headers() })
-    .then(r=>r.json()).then(data=>{
+  fetch(fnCtx('archive-accounts-list'), {
+    method:'POST', headers: headers(),
+    body: JSON.stringify({ requesting_user_id: userId })
+  }).then(r=>r.json()).then(data=>{
       const sel = document.getElementById('archiveAccountSelect');
+      if(!data.success){
+        sel.innerHTML = '<option value="">' + (data.error || 'تعذر التحميل') + '</option>';
+        return;
+      }
       sel.innerHTML = '<option value="">اختر الحساب...</option>';
-      data.forEach(a=>{
+      (data.accounts || []).forEach(a=>{
         const opt = document.createElement('option');
         opt.value = a.id;
         opt.textContent = a.name;
