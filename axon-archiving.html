@@ -541,10 +541,6 @@ document.getElementById('confirmFormBtn').addEventListener('click', async functi
     if(!invJson.success){
       throw new Error(invJson.error || 'فشل إنشاء الفاتورة.');
     }
-    if(!itemsRes.ok){
-      const errText = await itemsRes.text();
-      throw new Error('فشل حفظ البنود: ' + errText);
-    }
 
     msgBox.className = 'msg ok';
     msgBox.textContent = `تم حفظ الفاتورة بنجاح (${items.length} مادة، الإجمالي: ${totalValue.toFixed(2)}). لا يمكن التعديل عليها بعد الآن.`;
