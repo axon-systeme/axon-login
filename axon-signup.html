@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AXON — تسجيل مؤسسة جديدة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14171c; --ink-2:#1b1f26; --ink-3:#232833;
+    --brass:#b08d57; --brass-bright:#d4ac6e;
+    --paper:#ece7dc; --slate:#7d8493;
+    --ok:#5c9179; --err:#b0654f; --radius:14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background: radial-gradient(1200px 800px at 50% -10%, #1e2430 0%, var(--ink) 55%), var(--ink);
+    color:var(--paper); font-family:'IBM Plex Sans Arabic', sans-serif;
+    min-height:100vh; padding:24px 16px 60px; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:460px; margin:0 auto; }
+  header{ text-align:center; margin-bottom:22px; }
+  header img{ height:42px; }
+  .subtitle{ text-align:center; color:var(--slate); font-size:0.85rem; margin-bottom:24px; }
+
+  .card{
+    background:var(--ink-2); border:1px solid var(--ink-3); border-radius:var(--radius);
+    padding:22px; box-shadow:0 12px 30px -18px rgba(0,0,0,.5);
+  }
+  .card h2{ font-family:'Zilla Slab', serif; font-size:1.1rem; margin-bottom:4px; }
+  .card .sub{ font-size:0.78rem; color:var(--slate); margin-bottom:16px; }
+
+  .field{ margin-top:14px; }
+  .field label{ font-size:0.78rem; color:var(--slate); display:block; margin-bottom:5px; }
+  .field input, .field select{
+    width:100%; background:var(--ink); border:1px solid var(--ink-3); border-radius:8px;
+    padding:11px; color:var(--paper); font-family:inherit; font-size:0.9rem;
+  }
+  .field input:focus, .field select:focus{ outline:none; border-color:var(--brass); }
+
+  .divider{ border-top:1px solid var(--ink-3); margin:18px 0 4px; padding-top:14px; }
+  .divider .label{ font-size:0.8rem; color:var(--brass-bright); font-weight:600; margin-bottom:4px; }
+
+  .btn{
+    width:100%; margin-top:20px; padding:13px; border:none; border-radius:9px;
+    background:linear-gradient(180deg,var(--brass-bright),var(--brass));
+    color:#14171c; font-family:inherit; font-weight:600; font-size:0.92rem; cursor:pointer;
+  }
+  .btn:disabled{ opacity:0.6; }
+
+  .msg{ margin-top:14px; font-size:0.8rem; padding:9px 11px; border-radius:7px; display:none; }
+  .msg.show{ display:block; }
+  .msg.ok{ background:rgba(92,145,121,.14); color:#9fd2b8; }
+  .msg.err{ background:rgba(176,101,79,.14); color:#e3a794; }
+
+  .login-link{ text-align:center; margin-top:18px; font-size:0.82rem; color:var(--slate); }
+  .login-link a{ color:var(--brass-bright); text-decoration:none; font-weight:600; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <img src="axon-logo.png" alt="AXON">
+  </header>
+  <div class="subtitle">تسجيل مؤسسة جديدة على النظام</div>
+
+  <div class="card">
+    <h2>بيانات المؤسسة</h2>
+    <div class="sub">معلومات المؤسسة اللي راح تستعمل AXON.</div>
+
+    <div class="field">
+      <label>اسم المؤسسة</label>
+      <input type="text" id="orgName" placeholder="مثال: مدرسة النور الابتدائية">
+    </div>
+    <div class="field">
+      <label>نوع المؤسسة</label>
+      <select id="orgType">
+        <option value="education">مؤسسة تربوية</option>
+        <option value="government">مؤسسة حكومية</option>
+        <option value="company">شركة / مؤسسة خاصة</option>
+      </select>
+    </div>
+
+    <div class="divider">
+      <div class="label">حساب المسؤول (الأدمن)</div>
+      <div class="sub">هذا الحساب راح يكون له صلاحية كاملة على مؤسستك.</div>
+    </div>
+
+    <div class="field">
+      <label>الاسم الكامل</label>
+      <input type="text" id="adminName" placeholder="اسمك الكامل">
+    </div>
+    <div class="field">
+      <label>البريد الإلكتروني</label>
+      <input type="email" id="adminEmail" placeholder="name@example.com">
+    </div>
+    <div class="field">
+      <label>كلمة السر</label>
+      <input type="password" id="adminPassword" placeholder="8 خانات على الأقل">
+    </div>
+    <div class="field">
+      <label>تأكيد كلمة السر</label>
+      <input type="password" id="adminPasswordConfirm" placeholder="أعد كتابة كلمة السر">
+    </div>
+
+    <button class="btn" id="btnSignup">إنشاء المؤسسة</button>
+    <div class="msg" id="msgSignup"></div>
+  </div>
+
+  <div class="login-link">
+    عندك حساب من قبل؟ <a href="axon-portal.html">سجل دخولك من هنا</a>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://tmizzjieyeqbcxuxoucw.supabase.co";
+const ANON_KEY = "sb_publishable_0MXFCqGL0eqkteVozjLtDQ_VCmGeXhM";
+
+const REAL_SLUGS = { "org-signup": "XXXX" };
+function fn(name){ return `${SUPABASE_URL}/functions/v1/${REAL_SLUGS[name] || name}`; }
+function headers(){
+  return {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${ANON_KEY}`,
+    "apikey": ANON_KEY
+  };
+}
+
+function showMsg(text, type){
+  const el = document.getElementById('msgSignup');
+  el.textContent = text;
+  el.className = 'msg show ' + type;
+}
+
+document.getElementById('btnSignup').addEventListener('click', async ()=>{
+  const org_name = document.getElementById('orgName').value.trim();
+  const org_type = document.getElementById('orgType').value;
+  const full_name = document.getElementById('adminName').value.trim();
+  const email = document.getElementById('adminEmail').value.trim();
+  const password = document.getElementById('adminPassword').value;
+  const passwordConfirm = document.getElementById('adminPasswordConfirm').value;
+
+  if(!org_name || !full_name || !email || !password || !passwordConfirm){
+    showMsg('عمّر كل الحقول من فضلك.', 'err');
+    return;
+  }
+  if(password !== passwordConfirm){
+    showMsg('كلمتا السر غير متطابقتين.', 'err');
+    return;
+  }
+  if(password.length < 8){
+    showMsg('كلمة السر يجب أن تكون 8 خانات على الأقل.', 'err');
+    return;
+  }
+
+  const btn = document.getElementById('btnSignup');
+  btn.disabled = true; btn.textContent = 'جاري الإنشاء...';
+
+  try{
+    const res = await fetch(fn('org-signup'), {
+      method:'POST', headers: headers(),
+      body: JSON.stringify({ org_name, org_type, full_name, email, password })
+    });
+    const data = await res.json();
+
+    if(data.success){
+      showMsg('تم إنشاء مؤسستك بنجاح! جاري تحويلك لصفحة تسجيل الدخول...', 'ok');
+      setTimeout(()=>{ window.location.href = 'axon-portal.html'; }, 1800);
+    }else{
+      showMsg(data.error || 'تعذر إنشاء المؤسسة.', 'err');
+      btn.disabled = false; btn.textContent = 'إنشاء المؤسسة';
+    }
+  }catch(e){
+    showMsg('تعذر الاتصال بالسيرفر.', 'err');
+    btn.disabled = false; btn.textContent = 'إنشاء المؤسسة';
+  }
+});
+</script>
+</body>
+</html>
