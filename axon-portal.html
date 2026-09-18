@@ -401,7 +401,7 @@ document.getElementById('btnQrGenerate').addEventListener('click', async ()=>{
     
 qrHolder.innerHTML = '';
 
-const confirmUrl = `https://tarekguelma013-lgtm.github.io/axon-login/axon-qr-confirm.html?token=${data.token}`;
+const confirmUrl = `https://axon-systeme.github.io/axon-login/axon-qr-confirm.html?token=${data.token}`;
 
 qrHolder.innerHTML = `
   <img src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(confirmUrl)}"
