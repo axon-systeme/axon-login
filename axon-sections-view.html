@@ -125,10 +125,10 @@ async function loadSections(){
   try{
     const res = await fetch(`${SUPABASE_URL}/rest/v1/sections?select=*`, { headers: headers() });
     const data = await res.json();
-    if(!Array.isArray(data)){
-      box.innerHTML = `<div class="msg err">تعذر جلب البيانات.</div>`;
+  if(!Array.isArray(data)){
+      box.innerHTML = `<div class="msg err">تعذر جلب البيانات: ${data.message || res.status}<br><small>${data.hint || data.code || ''}</small></div>`;
       return;
-    }
+    }  
     document.getElementById('sectionsCount').textContent = data.length;
     if(data.length === 0){
       box.innerHTML = `<div class="msg">لا توجد أقسام بعد.</div>`;
@@ -157,7 +157,7 @@ async function loadPersons(){
     const res = await fetch(`${SUPABASE_URL}/rest/v1/persons?select=full_name,role,sections(name)`, { headers: headers() });
     const data = await res.json();
     if(!Array.isArray(data)){
-      box.innerHTML = `<div class="msg err">تعذر جلب البيانات.</div>`;
+      box.innerHTML = `<div class="msg err">تعذر جلب البيانات: ${data.message || res.status}<br><small>${data.hint || data.code || ''}</small></div>`;
       return;
     }
     document.getElementById('personsCount').textContent = data.length;
