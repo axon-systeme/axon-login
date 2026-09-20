@@ -133,7 +133,12 @@ function showMsg(text, type){
   el.textContent = text;
   el.className = 'msg show ' + type;
 }
+const params = new URLSearchParams(window.location.search);
+const inviteToken = params.get('token');
 
+if(!inviteToken){
+  document.querySelector('.card').innerHTML = '<div class="msg show err">هذا الرابط غير صالح للتسجيل. تواصل مع فريق AXON للحصول على رابط تسجيل صحيح.</div>';
+}
 document.getElementById('btnSignup').addEventListener('click', async ()=>{
   const org_name = document.getElementById('orgName').value.trim();
   const org_type = document.getElementById('orgType').value;
@@ -161,7 +166,7 @@ document.getElementById('btnSignup').addEventListener('click', async ()=>{
   try{
     const res = await fetch(fn('org-signup'), {
       method:'POST', headers: headers(),
-      body: JSON.stringify({ org_name, org_type, full_name, email, password })
+      body: JSON.stringify({ org_name, org_type, full_name, email, password, token: inviteToken })
     });
     const data = await res.json();
 
