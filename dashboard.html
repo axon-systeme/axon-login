@@ -91,7 +91,7 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" data-module="children">
       <h2>ملفات الأطفال</h2>
       <div class="sub">الأطفال المسجّلون تحت حسابك كولي أمر.</div>
       <div id="childrenList"></div>
@@ -104,13 +104,13 @@
       </div>
     </div>
 
-    <div class="card">
+   <div class="card" data-module="logs"> 
       <h2>آخر عمليات الدخول</h2>
       <div class="sub">آخر 8 محاولات دخول على حسابك.</div>
       <div id="logsList"></div>
     </div>
 
-    <div class="card">
+   <div class="card" data-module="alerts"> 
       <h2>تنبيهات الطوارئ</h2>
       <div class="sub">أي تنبيهات نشطة أو سابقة على حسابك.</div>
       <div id="alertsList"></div>
@@ -129,7 +129,23 @@ let userId = params.get('uid') || sessionStorage.getItem('axon_user_id');
 if(!userId){
   window.location.href = 'axon-login-2.html';
 }
-
+const MODULES = {
+  family:    ['children', 'logs', 'alerts'],
+  company:   ['logs'],
+  education: ['logs'],
+  school:    ['logs'],
+  cafeteria: ['logs'],
+  archive:   ['logs'],
+};
+function allowedModules(org){
+  const key = org && (org.sector || org.org_type);
+  return MODULES[key] || ['logs'];
+}
+function applyModules(allowed){
+  document.querySelectorAll('[data-module]').forEach(el=>{
+    el.style.display = allowed.includes(el.dataset.module) ? '' : 'none';
+  });
+}
 function restHeaders(){
   return {
     "apikey": ANON_KEY,
@@ -167,14 +183,24 @@ async function loadDashboard(){
   document.getElementById('profileRole').textContent = u.role === 'parent' ? 'ولي أمر' : (u.role === 'admin' ? 'مسؤول' : 'مستخدم');
   document.getElementById('avatarLetter').textContent = u.email.charAt(0).toUpperCase();
 
-  const children = await restGet(`children_profiles?parent_user_id=eq.${userId}&select=id,display_name,birth_year&order=created_at.desc`);
-  renderChildren(children);
+  const orgRows = u.organization_id
+    ? await restGet(`organizations?id=eq.${u.organization_id}&select=org_type,sector`)
+    : [];
+  const allowed = allowedModules(orgRows[0]);
+  applyModules(allowed);
 
-  const logs = await restGet(`access_logs?user_id=eq.${userId}&select=status,method,attempted_at&order=attempted_at.desc&limit=8`);
-  renderLogs(logs);
-
-  const alerts = await restGet(`emergency_alerts?user_id=eq.${userId}&select=alert_type,status,created_at&order=created_at.desc&limit=5`);
-  renderAlerts(alerts);
+  if(allowed.includes('children')){
+    const children = await restGet(`children_profiles?parent_user_id=eq.${userId}&select=id,display_name,birth_year&order=created_at.desc`);
+    renderChildren(children);
+  }
+  if(allowed.includes('logs')){
+    const logs = await restGet(`access_logs?user_id=eq.${userId}&select=status,method,attempted_at&order=attempted_at.desc&limit=8`);
+    renderLogs(logs);
+  }
+  if(allowed.includes('alerts')){
+    const alerts = await restGet(`emergency_alerts?user_id=eq.${userId}&select=alert_type,status,created_at&order=created_at.desc&limit=5`);
+    renderAlerts(alerts);
+  }
 
   document.getElementById('loadingState').style.display = 'none';
   document.getElementById('content').style.display = 'block';
