@@ -158,6 +158,17 @@
       <button class="btn" id="btnAddAccount" style="width:100%;">+ إضافة حساب محمي</button>
     </div>
   </div>
+  <div class="card" id="cardSchoolSections" style="display:none;">
+    <h2>الأقسام</h2>
+    <div class="sub">أقسام مؤسستك والأساتذة المسؤولون عنها.</div>
+    <div id="sectionsList"><div class="loading">جاري التحميل...</div></div>
+  </div>
+
+  <div class="card" id="cardSchoolStudents" style="display:none;">
+    <h2>التلاميذ</h2>
+    <div class="sub">التلاميذ المسجّلون في مؤسستك.</div>
+    <div id="studentsList"><div class="loading">جاري التحميل...</div></div>
+  </div>
   <div class="card" id="cardHomeEmpty">
     <h2>الرئيسية</h2>
     <div class="sub">هذا القسم مخصص لمؤسسات الشركات فقط</div>
@@ -409,12 +420,40 @@ document.getElementById('btnGoArchive').addEventListener('click', ()=>{
 const MODULES = {
   company:   ['employees', 'protected', 'archiving'],
   archive:   ['archiving'],
-  school:    [],
+  school:    ['sections', 'students'],
   cafeteria: [],
   family:    [],
 };
 
 function setShown(el, on){ if(el) el.style.display = on ? '' : 'none'; }
+
+function esc(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function restRead(path){
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: { apikey: ANON_KEY } });
+  const d = await r.json();
+  return Array.isArray(d) ? d : [];
+}
+
+async function loadSchool(){
+  const [secs, studs] = await Promise.all([
+    restRead(`sections?organization_id=eq.${currentOrgId}&select=id,name,teacher_name&order=name`),
+    restRead(`persons?organization_id=eq.${currentOrgId}&role=eq.student&select=id,full_name,section_id&order=full_name`)
+  ]);
+  const nameOf = {}, counts = {};
+  secs.forEach(s => { nameOf[s.id] = s.name; counts[s.id] = 0; });
+  studs.forEach(p => { if(counts[p.section_id] !== undefined) counts[p.section_id]++; });
+
+  document.getElementById('sectionsList').innerHTML = secs.length
+    ? secs.map(s => `<div class="device-item"><div class="device-info"><div class="name">${esc(s.name)}</div><div class="meta">${esc(s.teacher_name || '—')} · ${counts[s.id]} تلميذ</div></div></div>`).join('')
+    : '<div class="empty">لا توجد أقسام.</div>';
+
+  document.getElementById('studentsList').innerHTML = studs.length
+    ? studs.map(p => `<div class="device-item"><div class="device-info"><div class="name">${esc(p.full_name)}</div><div class="meta">${esc(nameOf[p.section_id] || 'بدون قسم')}</div></div></div>`).join('')
+    : '<div class="empty">لا يوجد تلاميذ.</div>';
+}
 
 async function applyOrgModules(){
   let allowed = [];
@@ -431,17 +470,22 @@ async function applyOrgModules(){
   const emp  = allowed.includes('employees');
   const prot = allowed.includes('protected');
   const arch = allowed.includes('archiving');
+  const secs = allowed.includes('sections');
+  const stud = allowed.includes('students');
 
   setShown(document.getElementById('cardAddEmployee'), emp);
   setShown(document.getElementById('cardEmployeesList'), emp);
   setShown(document.getElementById('cardProtectedAccounts'), prot);
+  setShown(document.getElementById('cardSchoolSections'), secs);
+  setShown(document.getElementById('cardSchoolStudents'), stud);
   setShown(document.getElementById('cardHomeEmpty'), false);
-  setShown(document.querySelector('.tab-btn[data-tab="tabHome"]'), emp || prot);
+  setShown(document.querySelector('.tab-btn[data-tab="tabHome"]'), emp || prot || secs || stud);
   setShown(document.querySelector('.tab-btn[data-tab="tabArchiving"]'), arch);
 
   if(emp)  loadEmployees();
   if(prot) loadProtectedAccounts();
   if(arch) loadArchiveAccounts();
+  if(secs || stud) loadSchool();
 }
 
 loadUserContext().then(applyOrgModules);
