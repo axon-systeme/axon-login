@@ -405,17 +405,45 @@ document.getElementById('btnGoArchive').addEventListener('click', ()=>{
     btn.disabled = false; btn.textContent = '+ إضافة حساب أرشفة';
   }
 });
-loadUserContext().then(()=>{
-  loadArchiveAccounts();
-  if(true){
-    document.getElementById('cardProtectedAccounts').style.display = 'block';
-    document.getElementById('cardAddEmployee').style.display = '';
-    document.getElementById('cardEmployeesList').style.display = '';
-    document.getElementById('cardHomeEmpty').style.display = 'none';
-    loadEmployees();
-    loadProtectedAccounts();
-  }
-});
+const MODULES = {
+  company:   ['employees', 'protected', 'archiving'],
+  archive:   ['archiving'],
+  school:    [],
+  cafeteria: [],
+  family:    [],
+};
+
+function setShown(el, on){ if(el) el.style.display = on ? '' : 'none'; }
+
+async function applyOrgModules(){
+  let allowed = [];
+  try{
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/organizations?id=eq.${currentOrgId}&select=org_type,sector`,
+      { headers: { apikey: ANON_KEY } }
+    );
+    const rows = await r.json();
+    const org = Array.isArray(rows) ? rows[0] : null;
+    allowed = MODULES[org && (org.sector || org.org_type)] || [];
+  }catch(e){ allowed = []; }
+
+  const emp  = allowed.includes('employees');
+  const prot = allowed.includes('protected');
+  const arch = allowed.includes('archiving');
+
+  setShown(document.getElementById('cardAddEmployee'), emp);
+  setShown(document.getElementById('cardEmployeesList'), emp);
+  setShown(document.getElementById('cardProtectedAccounts'), prot);
+  setShown(document.getElementById('cardHomeEmpty'), false);
+  setShown(document.querySelector('.tab-btn[data-tab="tabHome"]'), emp || prot);
+  setShown(document.querySelector('.tab-btn[data-tab="tabArchiving"]'), arch);
+
+  if(emp)  loadEmployees();
+  if(prot) loadProtectedAccounts();
+  if(arch) loadArchiveAccounts();
+}
+
+loadUserContext().then(applyOrgModules);
 
 document.getElementById('btnAddAccount').addEventListener('click', async ()=>{
   const full_name = document.getElementById('newAccName').value.trim();
