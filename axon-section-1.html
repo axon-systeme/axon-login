@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AXON — إدارة المدرسة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14171c; --ink-2:#1b1f26; --ink-3:#232833;
+    --brass:#b08d57; --brass-bright:#d4ac6e;
+    --paper:#ece7dc; --slate:#7d8493;
+    --ok:#5c9179; --err:#b0654f; --radius:14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background: radial-gradient(1200px 800px at 50% -10%, #1e2430 0%, var(--ink) 55%), var(--ink);
+    color:var(--paper); font-family:'IBM Plex Sans Arabic', sans-serif;
+    min-height:100vh; padding:20px 16px 90px; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:560px; margin:0 auto; }
+  header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .home-link{
+    font-size:0.78rem; color:var(--slate); border:1px solid var(--ink-3);
+    padding:7px 12px; border-radius:8px; text-decoration:none;
+  }
+  .home-link:hover{ border-color:var(--brass); color:var(--paper); }
+  .org-name{ font-size:0.82rem; color:var(--slate); margin-bottom:18px; }
+
+  button{ font-family:inherit; }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible{
+    outline:2px solid var(--brass-bright); outline-offset:2px;
+  }
+
+  .searchbar input{
+    width:100%; background:var(--ink-2); border:1px solid var(--ink-3); border-radius:12px;
+    padding:14px 16px; color:var(--paper); font-family:inherit; font-size:1rem; margin-bottom:18px;
+  }
+  .sec-title{ font-family:'Zilla Slab', serif; font-size:1.05rem; margin:22px 0 10px; }
+
+  .card{
+    background:var(--ink-2); border:1px solid var(--ink-3); border-radius:var(--radius);
+    padding:18px; margin-bottom:14px;
+  }
+  .card h2{ font-family:'Zilla Slab', serif; font-size:1.1rem; margin-bottom:4px; }
+  .sub{ font-size:0.8rem; color:var(--slate); margin-bottom:12px; }
+  .dim{ font-size:0.8rem; color:var(--slate); }
+  .empty{ font-size:0.85rem; color:var(--slate); text-align:center; padding:18px 0; }
+  .loading{ text-align:center; color:var(--slate); font-size:0.9rem; padding:40px 0; }
+
+  .seccard{
+    display:block; width:100%; text-align:right; cursor:pointer; color:inherit;
+    border-inline-start:3px solid var(--brass);
+  }
+  .seccard:hover{ border-color:var(--brass-bright); }
+  .seccard .name{ font-weight:600; font-size:0.98rem; }
+  .seccard .meta{ font-size:0.8rem; color:var(--slate); margin-top:4px; }
+
+  .back{
+    background:none; border:1px solid var(--ink-3); color:var(--slate); border-radius:8px;
+    padding:8px 14px; font-size:0.82rem; cursor:pointer; margin-bottom:14px;
+  }
+  .back:hover{ border-color:var(--brass); color:var(--paper); }
+
+  .stu-head{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; }
+  .stu-name{ font-weight:600; font-size:1rem; }
+  .chip{
+    background:var(--ink-3); border:none; color:var(--brass-bright); font-size:0.72rem;
+    padding:4px 10px; border-radius:20px; cursor:pointer;
+  }
+  .info{ font-size:0.82rem; line-height:1.9; margin-bottom:10px; }
+
+  .grp{ border-top:1px solid var(--ink-3); padding-top:10px; margin-top:10px; }
+  .grp-head{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px; font-size:0.85rem; font-weight:600; }
+  .docrow{
+    display:flex; justify-content:space-between; align-items:center; gap:8px;
+    padding:8px 0; border-bottom:1px solid var(--ink-3); font-size:0.82rem;
+  }
+  .docrow:last-child{ border-bottom:none; }
+  .acts{ display:flex; gap:6px; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
+  .mini{
+    background:linear-gradient(180deg, var(--brass-bright), var(--brass)); color:#14171c;
+    border:none; border-radius:8px; padding:7px 12px; font-size:0.76rem; font-weight:600; cursor:pointer;
+  }
+  .mini.ghost{ background:none; border:1px solid var(--ink-3); color:var(--paper); }
+
+  .toolbar{ display:flex; gap:8px; margin-bottom:14px; }
+  .toolbar .btn{ margin-top:0; }
+
+  .btn{
+    width:100%; padding:12px; border-radius:9px; border:none; font-weight:600; font-size:0.9rem;
+    cursor:pointer; margin-top:8px;
+    background:linear-gradient(180deg, var(--brass-bright), var(--brass)); color:#14171c;
+  }
+  .btn.ghost{ background:none; border:1px solid var(--ink-3); color:var(--slate); }
+  .btn:disabled{ opacity:0.55; }
+
+  .sheet{
+    position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:200;
+    display:none; align-items:flex-end; justify-content:center;
+  }
+  .sheet.open{ display:flex; }
+  .sheet-body{
+    background:var(--ink-2); border-top:1px solid var(--ink-3); border-radius:18px 18px 0 0;
+    width:100%; max-width:560px; padding:20px 18px 26px; max-height:92vh; overflow-y:auto;
+  }
+  .sheet-body h3{ font-family:'Zilla Slab', serif; font-size:1.1rem; margin-bottom:4px; }
+  .sheet-body label{ display:block; font-size:0.78rem; color:var(--slate); margin:12px 0 6px; }
+  .sheet-body textarea, .sheet-body input, .sheet-body select{
+    width:100%; background:var(--ink); border:1px solid var(--ink-3); border-radius:8px;
+    padding:10px; color:var(--paper); font-family:inherit; font-size:0.9rem;
+  }
+  .sheet-body textarea{ resize:vertical; }
+  .pick{ display:flex; gap:8px; }
+  .pick .btn{ margin-top:0; }
+  .msg{ margin-top:10px; font-size:0.8rem; padding:9px 11px; border-radius:8px; display:none; }
+  .msg.show{ display:block; }
+  .msg.err{ background:rgba(176,101,79,.14); color:#e3a794; }
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:300;
+    background:var(--ink-3); border:1px solid var(--brass); color:var(--paper);
+    padding:11px 18px; border-radius:10px; font-size:0.85rem; display:none; max-width:90%; text-align:center;
+  }
+  .toast.show{ display:block; }
+  .toast.err{ border-color:var(--err); }
+
+  @media (prefers-reduced-motion: no-preference){
+    .sheet.open .sheet-body{ animation:rise .18s ease-out; }
+    @keyframes rise{ from{ transform:translateY(24px); opacity:.6; } to{ transform:none; opacity:1; } }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <img src="axon-logo.png" alt="AXON" style="height:38px; width:auto;">
+    <a class="home-link" href="axon-account.html">لوحة الحساب</a>
+  </header>
+  <div class="org-name" id="orgName"></div>
+
+  <div id="app"><div class="loading">جاري التحميل...</div></div>
+</div>
+
+<!-- نموذج الإضافة والتعديل -->
+<div class="sheet" id="formSheet">
+  <div class="sheet-body">
+    <h3 id="formTitle"></h3>
+    <div class="sub" id="formSub"></div>
+    <div id="formFields"></div>
+    <button type="button" class="btn" id="formSubmit">حفظ</button>
+    <button type="button" class="btn ghost" id="formCancel">إلغاء</button>
+    <div class="msg" id="formMsg"></div>
+  </div>
+</div>
+
+<!-- أرشفة وثيقة -->
+<div class="sheet" id="sheet">
+  <div class="sheet-body">
+    <h3 id="sheetTitle">أرشفة وثيقة</h3>
+    <div class="sub" id="sheetSub"></div>
+
+    <div id="fileBlock">
+      <label>الملف (صورة أو PDF)</label>
+      <div class="pick">
+        <button type="button" class="btn ghost" id="pickCamera">التقط صورة</button>
+        <button type="button" class="btn ghost" id="pickFile">اختر ملفًا</button>
+      </div>
+      <input type="file" id="fileCamera" accept="image/*" capture="environment" style="display:none">
+      <input type="file" id="fileAny" accept="image/*,application/pdf" style="display:none">
+      <div class="dim" id="fileName" style="margin-top:8px;"></div>
+    </div>
+
+    <div id="presetBlock" style="display:none;">
+      <div class="dim" style="margin-top:12px;">ستُؤرشف بطاقة المعلومات كما هي الآن، ولا يمكن تعديلها بعد الأرشفة.</div>
+      <img id="cardPreview" alt="معاينة البطاقة" style="width:100%; border-radius:8px; margin-top:10px; background:#fff;">
+    </div>
+
+    <label>ملاحظة (اختياري)</label>
+    <textarea id="note" rows="2"></textarea>
+
+    <button type="button" class="btn" id="confirmUpload">تأكيد الأرشفة ببصمة اليد</button>
+    <button type="button" class="btn ghost" id="cancelUpload">إلغاء</button>
+    <div class="msg" id="sheetMsg"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@10/dist/bundle/index.umd.min.js"></script>
+<script>
+const SUPABASE_URL = "https://tmizzjieyeqbcxuxoucw.supabase.co";
+const ANON_KEY = "sb_publishable_0MXFCqGL0eqkteVozjLtDQ_VCmGeXhM";
+
+const SLUGS = {
+  "get-user-context": "bright-handler",
+  "login-biometric-options": "smart-endpoint",
+  "login-biometric-verify": "rapid-api",
+  "save-photo-archive": "smart-service",
+  "get-archive-data": "dynamic-task"
+};
+const ARCHIVE_ACCOUNT_NAME = "أرشيف المدرسة";
+const TYPE_LABEL = {
+  school_certificate: "شهادة مدرسية",
+  grade_report: "كشف النقاط",
+  teacher_file: "ملف الأستاذ",
+  student_file: "بطاقة معلومات التلميذ"
+};
+const LEVELS = ["ابتدائي", "متوسط", "ثانوي"];
+
+function fn(name){ return `${SUPABASE_URL}/functions/v1/${SLUGS[name] || name}`; }
+function headers(){
+  return {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${ANON_KEY}`,
+    "apikey": ANON_KEY
+  };
+}
+function $(id){ return document.getElementById(id); }
+function esc(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function norm(s){
+  return String(s || '').toLowerCase()
+    .replace(/[\u064B-\u0652\u0640]/g, '')
+    .replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').trim();
+}
+function fmtDate(x){
+  if(!x) return '';
+  const d = new Date(x);
+  if(isNaN(d)) return '';
+  return d.toLocaleDateString('ar', { year:'numeric', month:'short', day:'numeric' });
+}
+
+const params = new URLSearchParams(window.location.search);
+const userId = params.get('uid') || sessionStorage.getItem('axon_user_id');
+if(!userId){ window.location.href = 'axon-portal.html'; }
+
+let ctx = { email: null, orgId: null, orgName: null, role: null };
+let sections = [], students = [], docs = [];
+let archiveAccountId = null;
+let currentSectionId = params.get('id') || null;
+let searchQuery = '';
+
+function canEdit(){ return !ctx.role || ctx.role === 'admin'; }
+
+async function restRead(path){
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: { apikey: ANON_KEY } });
+  const d = await r.json();
+  return Array.isArray(d) ? d : [];
+}
+
+function fatal(msg){
+  $('app').innerHTML = `<div class="card"><div class="empty">${esc(msg)}</div></div>`;
+}
+
+let toastTimer = null;
+function toast(text, isErr){
+  const el = $('toast');
+  el.textContent = text;
+  el.className = 'toast show' + (isErr ? ' err' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ el.className = 'toast'; }, 3500);
+}
+
+// ===== تحميل البيانات =====
+async function refreshData(){
+  const oid = encodeURIComponent(ctx.orgId);
+  [sections, students] = await Promise.all([
+    restRead(`sections?organization_id=eq.${oid}&select=id,name,teacher_name,teacher_phone,education_level&order=name`),
+    restRead(`persons?organization_id=eq.${oid}&role=eq.student&select=id,full_name,section_id,birth_date,guardian_name,guardian_phone&order=full_name`)
+  ]);
+}
+
+async function loadDocs(){
+  const acc = await restRead(`accounts?organization_id=eq.${encodeURIComponent(ctx.orgId)}&name=eq.${encodeURIComponent(ARCHIVE_ACCOUNT_NAME)}&select=id`);
+  archiveAccountId = acc[0] ? acc[0].id : null;
+  if(!archiveAccountId){ docs = []; return; }
+  try{
+    const r = await fetch(fn('get-archive-data'), {
+      method:'POST', headers: headers(),
+      body: JSON.stringify({ user_id: userId, account_id: archiveAccountId })
+    });
+    const d = await r.json();
+    docs = (d.success && Array.isArray(d.photos)) ? d.photos : [];
+  }catch(e){ docs = []; }
+}
+
+async function loadAll(){
+  try{
+    const r = await fetch(fn('get-user-context'), {
+      method:'POST', headers: headers(), body: JSON.stringify({ user_id: userId })
+    });
+    const d = await r.json();
+    if(!d.success || !d.organization){ fatal('تعذر التعرف على مؤسستك. سجّل الدخول من جديد.'); return; }
+    ctx.email = d.user.email;
+    ctx.role = d.user.role || null;
+    ctx.orgId = d.organization.id;
+    ctx.orgName = d.organization.name;
+  }catch(e){ fatal('تعذر الاتصال بالسيرفر.'); return; }
+
+  if(!ctx.role){
+    const u = await restRead(`users?id=eq.${encodeURIComponent(userId)}&select=role`);
+    ctx.role = u[0] ? u[0].role : null;
+  }
+  $('orgName').textContent = ctx.orgName || '';
+
+  const orgRows = await restRead(`organizations?id=eq.${encodeURIComponent(ctx.orgId)}&select=org_type,sector`);
+  const org = orgRows[0];
+  if(!org || (org.sector || org.org_type) !== 'school'){
+    fatal('هذه الصفحة خاصة بمؤسسات المدارس.');
+    return;
+  }
+
+  await refreshData();
+  await loadDocs();
+  render();
+}
+
+// ===== الإضافة والتعديل (عبر السيرفر) =====
+async function manage(action, payload){
+  const r = await fetch(`${SUPABASE_URL}/functions/v1/school-manage`, {
+    method:'POST', headers: headers(),
+    body: JSON.stringify({ action, user_id: userId, ...payload })
+  });
+  let d = {};
+  try{ d = await r.json(); }catch(e){}
+  if(!d.success){
+    throw new Error((d.error || 'تعذر تنفيذ العملية.') + (d.detail ? ` (${d.detail})` : ''));
+  }
+  return d;
+}
+
+let formCfg = null;
+function openForm(cfg){
+  formCfg = cfg;
+  $('formTitle').textContent = cfg.title;
+  $('formSub').textContent = cfg.sub || '';
+  $('formMsg').className = 'msg';
+  $('formSubmit').textContent = cfg.submitLabel || 'حفظ';
+  $('formFields').innerHTML = cfg.fields.map((f, i)=>{
+    const id = `ff_${i}`;
+    let input;
+    if(f.type === 'select'){
+      input = `<select id="${id}">${f.options.map(o =>
+        `<option value="${esc(o.value)}"${String(o.value) === String(f.value ?? '') ? ' selected' : ''}>${esc(o.label)}</option>`
+      ).join('')}</select>`;
+    }else{
+      input = `<input id="${id}" type="${esc(f.type || 'text')}" value="${esc(f.value || '')}"${f.placeholder ? ` placeholder="${esc(f.placeholder)}"` : ''} autocomplete="off">`;
+    }
+    return `<label for="${id}">${esc(f.label)}</label>${input}`;
+  }).join('');
+  $('formSheet').classList.add('open');
+}
+function closeForm(){ $('formSheet').classList.remove('open'); formCfg = null; }
+$('formCancel').addEventListener('click', closeForm);
+$('formSubmit').addEventListener('click', async ()=>{
+  if(!formCfg) return;
+  const values = {};
+  formCfg.fields.forEach((f, i)=>{ values[f.key] = $(`ff_${i}`).value.trim(); });
+  const btn = $('formSubmit');
+  btn.disabled = true;
+  try{
+    await formCfg.onSubmit(values);
+    closeForm();
+  }catch(e){
+    const m = $('formMsg');
+    m.textContent = e.message || 'حدث خطأ غير متوقع.';
+    m.className = 'msg show err';
+  }finally{
+    btn.disabled = false;
+  }
+});
+
+function levelOptions(){ return LEVELS.map(l => ({ value: l, label: l })); }
+function sectionOptions(){ return sections.map(s => ({ value: s.id, label: s.name })); }
+
+async function afterChange(message){
+  const y = window.scrollY;
+  await refreshData();
+  render();
+  window.scrollTo(0, y);
+  toast(message);
+}
+
+function addSectionForm(){
+  openForm({
+    title: 'إضافة قسم', submitLabel: 'إضافة القسم',
+    fields: [
+      { key:'name', label:'اسم القسم', placeholder:'مثال: السنة الأولى - قسم أ' },
+      { key:'education_level', label:'المستوى', type:'select', options: levelOptions(), value:'ابتدائي' },
+      { key:'teacher_name', label:'اسم الأستاذ' },
+      { key:'teacher_phone', label:'هاتف الأستاذ (اختياري)', type:'tel' }
+    ],
+    onSubmit: async v => {
+      if(!v.name) throw new Error('اسم القسم مطلوب.');
+      await manage('create_section', v);
+      await afterChange('تمت إضافة القسم.');
+    }
+  });
+}
+
+function editSectionForm(id){
+  const s = sections.find(x => x.id === id);
+  if(!s) return;
+  openForm({
+    title: 'تعديل القسم والأستاذ', submitLabel: 'حفظ التعديل',
+    fields: [
+      { key:'name', label:'اسم القسم', value: s.name },
+      { key:'education_level', label:'المستوى', type:'select', options: levelOptions(), value: s.education_level || 'ابتدائي' },
+      { key:'teacher_name', label:'اسم الأستاذ', value: s.teacher_name || '' },
+      { key:'teacher_phone', label:'هاتف الأستاذ (اختياري)', type:'tel', value: s.teacher_phone || '' }
+    ],
+    onSubmit: async v => {
+      if(!v.name) throw new Error('اسم القسم مطلوب.');
+      await manage('update_section', { section_id: id, ...v });
+      await afterChange('تم حفظ التعديل.');
+    }
+  });
+}
+
+function studentFields(p, sectionId){
+  return [
+    { key:'full_name', label:'الاسم الكامل للتلميذ', value: p ? p.full_name : '' },
+    { key:'section_id', label:'القسم', type:'select', options: sectionOptions(), value: sectionId || '' },
+    { key:'birth_date', label:'تاريخ الميلاد', type:'date', value: p && p.birth_date ? String(p.birth_date).slice(0, 10) : '' },
+    { key:'guardian_name', label:'اسم الولي', value: p ? (p.guardian_name || '') : '' },
+    { key:'guardian_phone', label:'هاتف الولي', type:'tel', value: p ? (p.guardian_phone || '') : '' }
+  ];
+}
+
+function addStudentForm(sectionId){
+  openForm({
+    title: 'إضافة تلميذ', submitLabel: 'إضافة التلميذ',
+    fields: studentFields(null, sectionId),
+    onSubmit: async v => {
+      if(!v.full_name) throw new Error('اسم التلميذ مطلوب.');
+      await manage('create_student', v);
+      await afterChange('تمت إضافة التلميذ.');
+    }
+  });
+}
+
+function editStudentForm(id){
+  const p = students.find(x => x.id === id);
+  if(!p) return;
+  openForm({
+    title: 'تعديل معلومات التلميذ', sub: 'التعديل لا يغيّر البطاقات المؤرشفة سابقًا.', submitLabel: 'حفظ التعديل',
+    fields: studentFields(p, p.section_id),
+    onSubmit: async v => {
+      if(!v.full_name) throw new Error('اسم التلميذ مطلوب.');
+      await manage('update_student', { person_id: id, ...v });
+      await afterChange('تم حفظ التعديل.');
+    }
+  });
+}
+
+// ===== بناء الواجهة =====
+function docRow(d, label){
+  return `<div class="docrow">
+    <div>
+      <div>${esc(fmtDate(d.created_at))}</div>
+      ${d.note ? `<div class="dim">${esc(d.note)}</div>` : ''}
+    </div>
+    <div class="acts">
+      <button class="mini ghost" data-view="${esc(d.image_path)}">عرض</button>
+      <button class="mini" data-dl="${esc(d.image_path)}" data-name="${esc(label)}">تنزيل</button>
+    </div>
+  </div>`;
+}
+
+function docGroup(type, owner, ids){
+  const list = docs.filter(d =>
+    d.doc_type === type &&
+    (ids.personId ? d.person_id === ids.personId : (d.section_id === ids.sectionId && !d.person_id))
+  );
+  const label = `${TYPE_LABEL[type]} - ${owner}`;
+  const rows = list.length
+    ? list.map(d => docRow(d, label)).join('')
+    : '<div class="dim">لا توجد وثيقة مؤرشفة.</div>';
+
+  let btns;
+  if(type === 'student_file'){
+    btns = `<button class="mini" data-card="student" data-person="${esc(ids.personId)}">أرشفة بطاقة المعلومات</button>`;
+  }else{
+    btns = `<button class="mini" data-upload="${esc(type)}" data-person="${esc(ids.personId || '')}" data-section="${esc(ids.sectionId || '')}" data-owner="${esc(owner)}">أرشفة وثيقة</button>`;
+    if(type === 'teacher_file'){
+      btns += `<button class="mini ghost" data-card="teacher" data-section="${esc(ids.sectionId)}">بطاقة معلومات</button>`;
+    }
+  }
+  return `<div class="grp">
+    <div class="grp-head"><span>${esc(TYPE_LABEL[type])}</span><span class="acts">${btns}</span></div>
+    ${rows}
+  </div>`;
+}
+
+function studentCard(p, showSection){
+  const sec = sections.find(s => s.id === p.section_id);
+  const info = [];
+  if(p.birth_date) info.push(`تاريخ الميلاد: ${esc(fmtDate(p.birth_date))}`);
+  if(p.guardian_name) info.push(`الولي: ${esc(p.guardian_name)}`);
+  if(p.guardian_phone) info.push(`هاتف الولي: ${esc(p.guardian_phone)}`);
+  const ids = { personId: p.id, sectionId: p.section_id || '' };
+  return `<div class="card">
+    <div class="stu-head">
+      <div class="stu-name">${esc(p.full_name)}</div>
+      <div class="acts">
+        ${showSection && sec ? `<button class="chip" data-open-section="${esc(sec.id)}">${esc(sec.name)}</button>` : ''}
+        ${canEdit() ? `<button class="mini ghost" data-edit-student="${esc(p.id)}">تعديل</button>` : ''}
+      </div>
+    </div>
+    <div class="info">${info.length ? info.map(i => `<div>${i}</div>`).join('') : '<div class="dim">لا توجد معلومات شخصية مسجلة بعد.</div>'}</div>
+    ${docGroup('student_file', p.full_name, ids)}
+    ${docGroup('school_certificate', p.full_name, ids)}
+    ${docGroup('grade_report', p.full_name, ids)}
+  </div>`;
+}
+
+function listView(){
+  const cards = sections.length ? sections.map(s => {
+    const n = students.filter(p => p.section_id === s.id).length;
+    return `<button class="card seccard" data-open-section="${esc(s.id)}">
+      <div class="name">${esc(s.name)}</div>
+      <div class="meta">${esc(s.teacher_name || 'بدون أستاذ')} — ${n} تلميذ</div>
+    </button>`;
+  }).join('') : `<div class="empty">لا توجد أقسام بعد.${canEdit() ? ' ابدأ بإضافة القسم الأول.' : ''}</div>`;
+
+  return `
+    <div class="searchbar">
+      <input id="q" type="search" placeholder="ابحث عن تلميذ بالاسم في كل الأقسام" value="${esc(searchQuery)}" autocomplete="off">
+    </div>
+    <div id="results"></div>
+    <div id="sectionsWrap">
+      <div class="sec-title">الأقسام</div>
+      ${canEdit() ? '<div class="toolbar"><button class="btn" data-add-section="1">إضافة قسم</button></div>' : ''}
+      ${cards}
+    </div>`;
+}
+
+function sectionView(s){
+  const list = students.filter(p => p.section_id === s.id);
+  const noArchive = archiveAccountId ? '' :
+    `<div class="card"><div class="dim">لا يوجد حساب أرشفة باسم «${esc(ARCHIVE_ACCOUNT_NAME)}» لمؤسستك، لذلك الأرشفة غير متاحة.</div></div>`;
+  const teacherInfo = [
+    `الأستاذ: ${esc(s.teacher_name || 'غير مسجل')}`,
+    s.teacher_phone ? `الهاتف: ${esc(s.teacher_phone)}` : '',
+    s.education_level ? `المستوى: ${esc(s.education_level)}` : ''
+  ].filter(Boolean).map(t => `<div>${t}</div>`).join('');
+
+  return `
+    <button class="back" data-back="1">رجوع إلى الأقسام</button>
+    ${noArchive}
+    <div class="card">
+      <h2>${esc(s.name)}</h2>
+      <div class="info">${teacherInfo}</div>
+      ${canEdit() ? `<div class="toolbar"><button class="btn ghost" data-edit-section="${esc(s.id)}">تعديل القسم والأستاذ</button></div>` : ''}
+      ${docGroup('teacher_file', s.teacher_name || 'الأستاذ', { sectionId: s.id })}
+    </div>
+    <div class="sec-title">التلاميذ (${list.length})</div>
+    ${canEdit() ? `<div class="toolbar"><button class="btn" data-add-student="${esc(s.id)}">إضافة تلميذ</button></div>` : ''}
+    ${list.length ? list.map(p => studentCard(p, false)).join('') : '<div class="empty">لا يوجد تلاميذ في هذا القسم.</div>'}`;
+}
+
+function applySearch(){
+  const res = $('results'), wrap = $('sectionsWrap');
+  if(!res || !wrap) return;
+  const q = norm(searchQuery);
+  if(!q){ res.innerHTML = ''; wrap.style.display = ''; return; }
+  wrap.style.display = 'none';
+  const found = students.filter(p => norm(p.full_name).includes(q)).slice(0, 30);
+  res.innerHTML = found.length
+    ? found.map(p => studentCard(p, true)).join('')
+    : '<div class="empty">لا يوجد تلميذ بهذا الاسم.</div>';
+}
+
+function render(){
+  const app = $('app');
+  const sec = currentSectionId ? sections.find(s => s.id === currentSectionId) : null;
+  if(sec){
+    app.innerHTML = sectionView(sec);
+  }else{
+    currentSectionId = null;
+    app.innerHTML = listView();
+    const q = $('q');
+    q.addEventListener('input', ()=>{ searchQuery = q.value; applySearch(); });
+    applySearch();
+  }
+}
+
+function openSection(id){
+  currentSectionId = id;
+  const p = new URLSearchParams(window.location.search);
+  if(id) p.set('id', id); else p.delete('id');
+  const qs = p.toString();
+  history.pushState({ id }, '', qs ? `?${qs}` : window.location.pathname);
+  render();
+  window.scrollTo(0, 0);
+}
+window.addEventListener('popstate', ()=>{
+  currentSectionId = new URLSearchParams(window.location.search).get('id');
+  render();
+});
+
+// ===== عرض وتنزيل الوثائق =====
+async function signedUrl(path){
+  try{
+    const r = await fetch(`${SUPABASE_URL}/storage/v1/object/sign/invoice-photos/${path}`, {
+      method:'POST', headers: headers(), body: JSON.stringify({ expiresIn: 600 })
+    });
+    const d = await r.json();
+    return d.signedURL ? `${SUPABASE_URL}/storage/v1${d.signedURL}` : null;
+  }catch(e){ return null; }
+}
+
+async function viewDoc(path){
+  const w = window.open('', '_blank');
+  const url = await signedUrl(path);
+  if(!url){ if(w) w.close(); toast('تعذر فتح الوثيقة.', true); return; }
+  if(w) w.location.href = url; else window.location.href = url;
+}
+
+async function downloadDoc(path, name){
+  const url = await signedUrl(path);
+  if(!url){ toast('تعذر تجهيز التنزيل.', true); return; }
+  try{
+    const r = await fetch(url);
+    const blob = await r.blob();
+    const ext = (path.split('.').pop() || 'jpg').toLowerCase();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${String(name || 'وثيقة').replace(/[\\/:*?"<>|]/g, '-')}.${ext}`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=> URL.revokeObjectURL(a.href), 4000);
+  }catch(e){ toast('تعذر التنزيل: ' + e.message, true); }
+}
+
+// ===== بطاقة المعلومات (صورة تُؤرشف) =====
+async function buildInfoCard(title, rows){
+  try{ await document.fonts.load('600 26px "IBM Plex Sans Arabic"'); }catch(e){}
+  const FONT = '"IBM Plex Sans Arabic", Tahoma, Arial, sans-serif';
+  const W = 900, PAD = 48, ROW = 92, HEAD = 120, FOOT = 130;
+  const H = HEAD + 30 + rows.length * ROW + FOOT;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  g.direction = 'rtl';
+  g.textAlign = 'right';
+
+  function fit(text, weight, size, maxW){
+    let s = size;
+    g.font = `${weight} ${s}px ${FONT}`;
+    while(g.measureText(text).width > maxW && s > 16){ s -= 2; g.font = `${weight} ${s}px ${FONT}`; }
+  }
+
+  g.fillStyle = '#ffffff'; g.fillRect(0, 0, W, H);
+  g.fillStyle = '#14171c'; g.fillRect(0, 0, W, HEAD);
+  g.fillStyle = '#d4ac6e'; fit('AXON', 700, 40, 200); g.fillText('AXON', W - PAD, 52);
+  g.fillStyle = '#ece7dc'; fit(title, 600, 30, W - 2 * PAD); g.fillText(title, W - PAD, 96);
+
+  let y = HEAD + 30;
+  rows.forEach(([label, value])=>{
+    g.fillStyle = '#7d8493'; fit(label, 400, 24, W - 2 * PAD); g.fillText(label, W - PAD, y + 30);
+    g.fillStyle = '#14171c'; fit(String(value || '—'), 600, 32, W - 2 * PAD); g.fillText(String(value || '—'), W - PAD, y + 72);
+    g.strokeStyle = '#e4e1da'; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(PAD, y + ROW - 6); g.lineTo(W - PAD, y + ROW - 6); g.stroke();
+    y += ROW;
+  });
+
+  g.fillStyle = '#555555';
+  const stamp = new Date().toLocaleString('ar');
+  const foot1 = `${ctx.orgName || ''}`;
+  const foot2 = `تاريخ الإنشاء: ${stamp}`;
+  const foot3 = `المؤرشف: ${ctx.email || ''} — موثق ببصمة اليد، لا يمكن التعديل أو الحذف`;
+  fit(foot1, 600, 24, W - 2 * PAD); g.fillText(foot1, W - PAD, y + 34);
+  fit(foot2, 400, 22, W - 2 * PAD); g.fillText(foot2, W - PAD, y + 68);
+  fit(foot3, 400, 20, W - 2 * PAD); g.fillText(foot3, W - PAD, y + 100);
+
+  return new Promise((resolve, reject)=>{
+    c.toBlob(b => b ? resolve(b) : reject(new Error('تعذر إنشاء البطاقة.')), 'image/png');
+  });
+}
+
+async function archiveCard(kind, id){
+  if(!archiveAccountId){
+    toast(`لا يوجد حساب أرشفة باسم «${ARCHIVE_ACCOUNT_NAME}».`, true);
+    return;
+  }
+  try{
+    if(kind === 'student'){
+      const p = students.find(x => x.id === id);
+      if(!p) return;
+      const sec = sections.find(s => s.id === p.section_id);
+      const blob = await buildInfoCard('بطاقة معلومات تلميذ', [
+        ['الاسم الكامل', p.full_name],
+        ['القسم', sec ? sec.name : '—'],
+        ['تاريخ الميلاد', fmtDate(p.birth_date) || '—'],
+        ['اسم الولي', p.guardian_name || '—'],
+        ['هاتف الولي', p.guardian_phone || '—']
+      ]);
+      openSheet('student_file', p.id, p.section_id || '', p.full_name, blob);
+    }else{
+      const s = sections.find(x => x.id === id);
+      if(!s) return;
+      const blob = await buildInfoCard('بطاقة معلومات أستاذ', [
+        ['اسم الأستاذ', s.teacher_name || '—'],
+        ['القسم', s.name],
+        ['المستوى', s.education_level || '—'],
+        ['الهاتف', s.teacher_phone || '—']
+      ]);
+      openSheet('teacher_file', '', s.id, s.teacher_name || 'الأستاذ', blob);
+    }
+  }catch(e){ toast(e.message || 'تعذر إنشاء البطاقة.', true); }
+}
+
+// ===== أرشفة وثيقة =====
+let upload = null;
+let pendingFile = null;
+let previewUrl = null;
+
+function showSheetMsg(text){
+  const el = $('sheetMsg');
+  el.textContent = text;
+  el.className = 'msg show err';
+}
+
+function openSheet(type, personId, sectionId, owner, presetBlob){
+  if(!archiveAccountId){
+    toast(`لا يوجد حساب أرشفة باسم «${ARCHIVE_ACCOUNT_NAME}».`, true);
+    return;
+  }
+  upload = { type, personId, sectionId };
+  pendingFile = presetBlob ? new File([presetBlob], 'card.png', { type: 'image/png' }) : null;
+  $('sheetTitle').textContent = `أرشفة: ${TYPE_LABEL[type]}`;
+  $('sheetSub').textContent = owner;
+  $('fileName').textContent = '';
+  $('note').value = '';
+  $('sheetMsg').className = 'msg';
+  $('fileCamera').value = '';
+  $('fileAny').value = '';
+  $('fileBlock').style.display = presetBlob ? 'none' : '';
+  $('presetBlock').style.display = presetBlob ? '' : 'none';
+  if(previewUrl){ URL.revokeObjectURL(previewUrl); previewUrl = null; }
+  if(presetBlob){
+    previewUrl = URL.createObjectURL(presetBlob);
+    $('cardPreview').src = previewUrl;
+  }
+  $('sheet').classList.add('open');
+}
+function closeSheet(){
+  $('sheet').classList.remove('open');
+  upload = null; pendingFile = null;
+  if(previewUrl){ URL.revokeObjectURL(previewUrl); previewUrl = null; }
+}
+
+function onFilePicked(e){
+  pendingFile = e.target.files[0] || null;
+  $('fileName').textContent = pendingFile ? `الملف المختار: ${pendingFile.name}` : '';
+}
+$('pickCamera').addEventListener('click', ()=> $('fileCamera').click());
+$('pickFile').addEventListener('click', ()=> $('fileAny').click());
+$('fileCamera').addEventListener('change', onFilePicked);
+$('fileAny').addEventListener('change', onFilePicked);
+$('cancelUpload').addEventListener('click', closeSheet);
+
+async function biometricCheck(){
+  if(!ctx.email) throw new Error('تعذر التعرف على المستخدم. سجّل الدخول من جديد.');
+  if(!window.PublicKeyCredential) throw new Error('هذا الجهاز أو المتصفح لا يدعم البصمة.');
+  const optRes = await fetch(fn('login-biometric-options'), {
+    method:'POST', headers: headers(), body: JSON.stringify({ email: ctx.email })
+  });
+  const options = await optRes.json();
+  if(options.error) throw new Error(options.error);
+  const authResp = await SimpleWebAuthnBrowser.startAuthentication(options);
+  const vRes = await fetch(fn('login-biometric-verify'), {
+    method:'POST', headers: headers(),
+    body: JSON.stringify({ user_id: userId, assertion_response: authResp })
+  });
+  const v = await vRes.json();
+  if(!v.success) throw new Error(v.error || 'فشل التحقق من البصمة.');
+}
+
+$('confirmUpload').addEventListener('click', async ()=>{
+  const btn = $('confirmUpload');
+  $('sheetMsg').className = 'msg';
+  if(!upload){ return; }
+  if(!pendingFile){ showSheetMsg('اختر ملفًا أو التقط صورة أولًا.'); return; }
+  if(pendingFile.size > 10 * 1024 * 1024){ showSheetMsg('حجم الملف أكبر من 10 ميغابايت.'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'جاري التحقق من البصمة...';
+  try{
+    await biometricCheck();
+
+    btn.textContent = 'جاري رفع الملف...';
+    const ext = ((pendingFile.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5)) || 'bin';
+    const path = `${archiveAccountId}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const up = await fetch(`${SUPABASE_URL}/storage/v1/object/invoice-photos/${path}`, {
+      method:'POST',
+      headers: { "Authorization": `Bearer ${ANON_KEY}`, "apikey": ANON_KEY, "Content-Type": pendingFile.type || 'application/octet-stream' },
+      body: pendingFile
+    });
+    if(!up.ok){
+      const t = await up.text();
+      throw new Error('فشل رفع الملف: ' + up.status + ' ' + t);
+    }
+
+    btn.textContent = 'جاري الأرشفة...';
+    const r = await fetch(fn('save-photo-archive'), {
+      method:'POST', headers: headers(),
+      body: JSON.stringify({
+        user_id: userId,
+        account_id: archiveAccountId,
+        image_path: path,
+        note: $('note').value.trim() || null,
+        person_id: upload.personId || null,
+        section_id: upload.sectionId || null,
+        doc_type: upload.type
+      })
+    });
+    const j = await r.json();
+    if(!j.success) throw new Error(j.error || 'فشل تسجيل الأرشفة.');
+
+    const y = window.scrollY;
+    closeSheet();
+    await loadDocs();
+    render();
+    window.scrollTo(0, y);
+    toast('تمت الأرشفة. لا يمكن تعديل الوثيقة أو حذفها.');
+  }catch(e){
+    showSheetMsg(e.message || 'حدث خطأ غير متوقع.');
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'تأكيد الأرشفة ببصمة اليد';
+  }
+});
+
+// ===== الأزرار (تفويض الأحداث) =====
+document.addEventListener('click', e=>{
+  const t = e.target.closest('[data-view],[data-dl],[data-upload],[data-card],[data-open-section],[data-back],[data-add-section],[data-edit-section],[data-add-student],[data-edit-student]');
+  if(!t) return;
+  if(t.dataset.view) viewDoc(t.dataset.view);
+  else if(t.dataset.dl) downloadDoc(t.dataset.dl, t.dataset.name);
+  else if(t.dataset.upload) openSheet(t.dataset.upload, t.dataset.person, t.dataset.section, t.dataset.owner);
+  else if(t.dataset.card) archiveCard(t.dataset.card, t.dataset.card === 'student' ? t.dataset.person : t.dataset.section);
+  else if(t.dataset.openSection) openSection(t.dataset.openSection);
+  else if(t.dataset.back) openSection(null);
+  else if(t.dataset.addSection) addSectionForm();
+  else if(t.dataset.editSection) editSectionForm(t.dataset.editSection);
+  else if(t.dataset.addStudent) addStudentForm(t.dataset.addStudent);
+  else if(t.dataset.editStudent) editStudentForm(t.dataset.editStudent);
+});
+
+loadAll();
+</script>
+</body>
+</html>
