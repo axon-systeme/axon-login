@@ -321,7 +321,7 @@ async function loadAll(){
 
 // ===== الإضافة والتعديل (عبر السيرفر) =====
 async function manage(action, payload){
-  const r = await fetch(`${SUPABASE_URL}/functions/v1/school-manage`, {
+  const r = await fetch(`${SUPABASE_URL}/functions/v1/swift-api`, {
     method:'POST', headers: headers(),
     body: JSON.stringify({ action, user_id: userId, ...payload })
   });
