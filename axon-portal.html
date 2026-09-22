@@ -440,7 +440,7 @@ function startQrPoll(token){
         clearInterval(qrPollTimer);
         clearInterval(qrCountdownTimer);
         showMsg('msgQr','تم تأكيد الدخول ✅','ok');
-        goToDashboard(data.user_id);
+        goToDashboard(data.user_id, data.session_token);
         return;
       }
       if(data.status === 'expired'){
