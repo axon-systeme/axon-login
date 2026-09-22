@@ -259,10 +259,11 @@ function showPanel(id){
   });
 }
 
-function goToDashboard(uid){
+function goToDashboard(uid, token){
   sessionStorage.setItem('axon_user_id', uid);
+  if(token) sessionStorage.setItem('axon_session_token', token);
   showPanel('panelSuccess');
-  setTimeout(()=>{ window.location.href = `axon-account.html?uid=${uid}`; }, 1100);
+  setTimeout(()=>{ window.location.href = `axon-account.html`; }, 1100);
 }
 
 // ===== تبديل التبويبات =====
@@ -295,7 +296,7 @@ try{
     const data = await res.json();
 
     if(data.success){
-      goToDashboard(data.user_id);
+      goToDashboard(data.user_id, data.session_token);
       return;
     }
     if(data.locked){
