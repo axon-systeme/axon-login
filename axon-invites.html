@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AXON — روابط الدعوة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14171c; --ink-2:#1b1f26; --ink-3:#232833;
+    --brass:#b08d57; --brass-bright:#d4ac6e;
+    --paper:#ece7dc; --slate:#7d8493;
+    --ok:#5c9179; --err:#b0654f; --radius:14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background: radial-gradient(1200px 800px at 50% -10%, #1e2430 0%, var(--ink) 55%), var(--ink);
+    color:var(--paper); font-family:'IBM Plex Sans Arabic', sans-serif;
+    min-height:100vh; padding:20px 16px 60px; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:560px; margin:0 auto; }
+  header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+  .home-link{
+    font-size:0.78rem; color:var(--slate); border:1px solid var(--ink-3);
+    padding:7px 12px; border-radius:8px; text-decoration:none;
+  }
+  h1{ font-family:'Zilla Slab', serif; font-size:1.2rem; }
+  button, input, select{ font-family:inherit; }
+  button:focus-visible, input:focus-visible, select:focus-visible{
+    outline:2px solid var(--brass-bright); outline-offset:2px;
+  }
+
+  .card{
+    background:var(--ink-2); border:1px solid var(--ink-3); border-radius:var(--radius);
+    padding:18px; margin-bottom:16px;
+  }
+  .card h2{ font-family:'Zilla Slab', serif; font-size:1.05rem; margin-bottom:4px; }
+  .sub{ font-size:0.8rem; color:var(--slate); margin-bottom:14px; }
+  label{ display:block; font-size:0.78rem; color:var(--slate); margin:12px 0 6px; }
+  input, select{
+    width:100%; background:var(--ink); border:1px solid var(--ink-3); border-radius:8px;
+    padding:10px; color:var(--paper); font-size:0.9rem;
+  }
+  .btn{
+    width:100%; padding:12px; border-radius:9px; border:none; font-weight:600; font-size:0.9rem;
+    cursor:pointer; margin-top:14px;
+    background:linear-gradient(180deg, var(--brass-bright), var(--brass)); color:#14171c;
+  }
+  .btn:disabled{ opacity:0.55; }
+  .msg{ margin-top:10px; font-size:0.8rem; padding:9px 11px; border-radius:8px; display:none; }
+  .msg.show{ display:block; }
+  .msg.ok{ background:rgba(92,145,121,.14); color:#9fd2b8; }
+  .msg.err{ background:rgba(176,101,79,.14); color:#e3a794; }
+
+  .result{ margin-top:14px; }
+  .link-box{
+    display:flex; gap:8px; background:var(--ink); border:1px solid var(--ink-3); border-radius:8px;
+    padding:10px; font-size:0.78rem; word-break:break-all; align-items:center;
+  }
+  .link-box span{ flex:1; }
+  .copy-btn{
+    flex-shrink:0; background:var(--ink-3); border:none; color:var(--brass-bright);
+    border-radius:6px; padding:6px 10px; font-size:0.75rem; cursor:pointer;
+  }
+
+  .item{ padding:12px 0; border-bottom:1px solid var(--ink-3); font-size:0.82rem; }
+  .item:last-child{ border-bottom:none; }
+  .item .row{ display:flex; justify-content:space-between; gap:8px; align-items:center; }
+  .item .link{ word-break:break-all; color:var(--slate); font-size:0.74rem; margin-top:4px; }
+  .badge{ font-size:0.68rem; padding:3px 9px; border-radius:20px; flex-shrink:0; }
+  .badge.open{ background:rgba(92,145,121,.15); color:#9fd2b8; }
+  .badge.used{ background:rgba(176,141,87,.15); color:var(--brass-bright); }
+  .badge.expired{ background:rgba(176,101,79,.15); color:#e3a794; }
+  .mini{
+    background:none; border:1px solid var(--ink-3); color:var(--slate); border-radius:7px;
+    padding:5px 10px; font-size:0.74rem; cursor:pointer; flex-shrink:0;
+  }
+  .empty, .loading{ text-align:center; color:var(--slate); font-size:0.85rem; padding:16px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>روابط الدعوة</h1>
+    <a class="home-link" href="axon-account.html">لوحة الحساب</a>
+  </header>
+
+  <div class="card">
+    <h2>إنشاء رابط جديد</h2>
+    <div class="sub">رابط لمرة واحدة، ينشئ مؤسسة وحسابًا جديدًا، ويُلغى تلقائيًا بعد الاستعمال.</div>
+
+    <label for="orgType">نوع المؤسسة</label>
+    <select id="orgType">
+      <option value="education">مؤسسة تربوية</option>
+      <option value="government">مؤسسة حكومية</option>
+      <option value="company">شركة / مؤسسة خاصة</option>
+      <option value="family">عائلة</option>
+    </select>
+
+    <label for="sector">القطاع (للمؤسسات التربوية فقط)</label>
+    <select id="sector">
+      <option value="">بدون تحديد</option>
+      <option value="school">مدرسة</option>
+      <option value="cafeteria">مطعم مدرسي</option>
+      <option value="archive">أرشفة</option>
+    </select>
+
+    <label for="days">صلاحية الرابط (بالأيام)</label>
+    <input type="number" id="days" value="2" min="1" max="30">
+
+    <button class="btn" id="btnCreate">إنشاء الرابط</button>
+    <div class="msg" id="createMsg"></div>
+    <div class="result" id="createResult"></div>
+  </div>
+
+  <div class="card">
+    <h2>آخر الروابط</h2>
+    <div class="sub">آخر 50 رابطًا. الملغى لا يمكن استرجاعه.</div>
+    <div id="list"><div class="loading">جاري التحميل...</div></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://tmizzjieyeqbcxuxoucw.supabase.co";
+const ANON_KEY = "sb_publishable_0MXFCqGL0eqkteVozjLtDQ_VCmGeXhM";
+const FN_SLUG = "create-invite"; // بدّل هذا القيمة برابط الدالة الحقيقي إذا اختلف بعد النشر
+
+function fnUrl(){ return `${SUPABASE_URL}/functions/v1/${FN_SLUG}`; }
+function headers(){
+  return {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${ANON_KEY}`,
+    "apikey": ANON_KEY
+  };
+}
+function $(id){ return document.getElementById(id); }
+function esc(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function fmtDate(x){
+  if(!x) return '—';
+  const d = new Date(x);
+  return isNaN(d) ? '—' : d.toLocaleString('ar', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+const params = new URLSearchParams(window.location.search);
+const userId = params.get('uid') || sessionStorage.getItem('axon_user_id');
+if(!userId){ window.location.href = 'axon-portal.html'; }
+
+async function call(action, payload){
+  const r = await fetch(fnUrl(), {
+    method:'POST', headers: headers(),
+    body: JSON.stringify({ action, user_id: userId, ...payload })
+  });
+  let d = {};
+  try{ d = await r.json(); }catch(e){}
+  if(!d.success) throw new Error((d.error || 'تعذر تنفيذ العملية.') + (d.detail ? ` (${d.detail})` : ''));
+  return d;
+}
+
+function statusOf(inv){
+  if(inv.used) return { key:'used', label: inv.used_by_email ? `مستعمل — ${inv.used_by_email}` : 'ملغى' };
+  if(inv.expires_at && new Date(inv.expires_at) < new Date()) return { key:'expired', label:'منتهي' };
+  return { key:'open', label:'مفتوح' };
+}
+
+function renderList(invites){
+  const el = $('list');
+  if(!invites.length){ el.innerHTML = '<div class="empty">لا توجد روابط بعد.</div>'; return; }
+  el.innerHTML = invites.map(i=>{
+    const st = statusOf(i);
+    return `<div class="item">
+      <div class="row">
+        <div>${esc(i.org_type_allowed)}${i.sector ? ' · ' + esc(i.sector) : ''}</div>
+        <span class="badge ${st.key}">${esc(st.label)}</span>
+      </div>
+      <div class="link">${esc(i.link)}</div>
+      <div class="row" style="margin-top:6px;">
+        <span class="sub" style="margin:0;">ينتهي: ${esc(fmtDate(i.expires_at))}</span>
+        ${st.key === 'open' ? `<button class="mini" data-revoke="${esc(i.id)}">إلغاء</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function refreshList(){
+  try{
+    const d = await call('list', {});
+    renderList(d.invites || []);
+  }catch(e){
+    $('list').innerHTML = `<div class="empty">${esc(e.message)}</div>`;
+  }
+}
+
+$('btnCreate').addEventListener('click', async ()=>{
+  const btn = $('btnCreate');
+  const msg = $('createMsg');
+  msg.className = 'msg';
+  $('createResult').innerHTML = '';
+  btn.disabled = true; btn.textContent = 'جاري الإنشاء...';
+  try{
+    const d = await call('create', {
+      org_type_allowed: $('orgType').value,
+      sector: $('sector').value || null,
+      expires_days: parseInt($('days').value, 10) || 2
+    });
+    $('createResult').innerHTML = `<div class="link-box"><span id="newLink">${esc(d.link)}</span><button class="copy-btn" id="copyBtn">نسخ</button></div>`;
+    $('copyBtn').addEventListener('click', async ()=>{
+      try{ await navigator.clipboard.writeText(d.link); $('copyBtn').textContent = 'تم النسخ'; }
+      catch(e){ msg.textContent = 'انسخ الرابط يدويًا.'; msg.className = 'msg show err'; }
+    });
+    await refreshList();
+  }catch(e){
+    msg.textContent = e.message || 'حدث خطأ غير متوقع.';
+    msg.className = 'msg show err';
+  }finally{
+    btn.disabled = false; btn.textContent = 'إنشاء الرابط';
+  }
+});
+
+document.addEventListener('click', async e=>{
+  const t = e.target.closest('[data-revoke]');
+  if(!t) return;
+  if(!confirm('إلغاء هذا الرابط؟ لن يُستعمل بعدها.')) return;
+  t.disabled = true;
+  try{
+    await call('revoke', { id: t.dataset.revoke });
+    await refreshList();
+  }catch(e){
+    alert(e.message || 'تعذر الإلغاء.');
+    t.disabled = false;
+  }
+});
+
+refreshList();
+</script>
+</body>
+</html>
