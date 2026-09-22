@@ -362,7 +362,7 @@ document.getElementById('btnBiometric').addEventListener('click', async ()=>{
     const verifyData = await verifyRes.json();
 
     if(verifyData.success){
-      goToDashboard(userId);
+      goToDashboard(userId, verifyData.session_token);
       return;
     }
    showMsg('msgBiometric', verifyData.error || t('err_biometric_failed'), 'err'); 
