@@ -317,7 +317,7 @@ function headers(){
 }
 
 const params = new URLSearchParams(window.location.search);
-<a href="axon-invites.html" style="display:block; text-align:center; text-decoration:none; margin-top:12px; padding:11px; border-radius:8px; background:linear-gradient(180deg,var(--brass-bright),var(--brass)); color:#14171c; font-weight:600; font-size:0.88rem;">روابط الدعوة</a>
+const userId = params.get('uid') || sessionStorage.getItem('axon_user_id');
 
 if(!userId){
   window.location.href = "axon-portal.html";
@@ -479,6 +479,7 @@ async function applyOrgModules(){
   setShown(document.getElementById('cardSchoolSections'), secs);
   setShown(document.getElementById('cardSchoolStudents'), stud);
   setShown(document.getElementById('cardHomeEmpty'), false);
+<a href="axon-invites.html" style="display:block; text-align:center; text-decoration:none; margin-top:12px; padding:11px; border-radius:8px; background:linear-gradient(180deg,var(--brass-bright),var(--brass)); color:#14171c; font-weight:600; font-size:0.88rem;">روابط الدعوة</a>  
   setShown(document.querySelector('.tab-btn[data-tab="tabHome"]'), emp || prot || secs || stud);
   setShown(document.querySelector('.tab-btn[data-tab="tabArchiving"]'), arch);
 
