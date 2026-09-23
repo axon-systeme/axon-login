@@ -596,7 +596,7 @@ async function loadDevices(){
   try{
     const res = await fetch(fnUrl(MANAGE_DEVICES_FN), {
       method:'POST', headers: headers(),
-      body: JSON.stringify({ session_token: sessionToken })
+      body: JSON.stringify({ action: 'list', session_token: sessionToken })
     });
     const data = await res.json();
 
