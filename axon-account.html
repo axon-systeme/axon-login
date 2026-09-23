@@ -322,7 +322,7 @@ const userId = params.get('uid') || sessionStorage.getItem('axon_user_id');
 if(!userId){
   window.location.href = "axon-portal.html";
 }
-document.title = 'TOKEN: ' + (sessionStorage.getItem('axon_session_token') ? 'موجود' : 'مفقود');
+
 document.getElementById('avatarLetter').textContent = '?';
 const REAL_SLUGS_CTX = { "get-user-context": "bright-handler", "protected-accounts-list": "smooth-endpoint", "protected-account-create": "steady-worker", "employees-manage": "super-action", "message-manage": "smart-processor", "archive-accounts-list": "swift-task", "archive-account-create": "hyper-task" };
 function fnCtx(name){ return `${SUPABASE_URL}/functions/v1/${REAL_SLUGS_CTX[name] || name}`; }
