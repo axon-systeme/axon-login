@@ -399,7 +399,7 @@ document.getElementById('btnGoArchive').addEventListener('click', ()=>{
   try{
     const res = await fetch(fnCtx('archive-account-create'), {
       method:'POST', headers: headers(),
-      body: JSON.stringify({ requesting_user_id: userId, name, account_type: account_type || null })
+      body: JSON.stringify({ session_token: sessionToken, name, account_type: account_type || null })
     });
     const data = await res.json();
 
