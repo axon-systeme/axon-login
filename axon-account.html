@@ -511,7 +511,7 @@ document.getElementById('btnAddAccount').addEventListener('click', async ()=>{
     const res = await fetch(fnCtx('protected-account-create'), {
       method:'POST', headers: headers(),
       body: JSON.stringify({
-        requesting_user_id: userId,
+       session_token: sessionToken, 
         full_name,
         email: email || null,
         phone: phone || null
@@ -545,7 +545,7 @@ async function loadProtectedAccounts(){
   try{
     const res = await fetch(fnCtx('protected-accounts-list'), {
       method:'POST', headers: headers(),
-      body: JSON.stringify({ requesting_user_id: userId })
+      body: JSON.stringify({ session_token: sessionToken })
     });
     const data = await res.json();
 
