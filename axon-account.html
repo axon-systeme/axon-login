@@ -668,7 +668,7 @@ async function loadEmployees(){
   try{
     const res = await fetch(fnCtx(EMPLOYEES_FN), {
       method:'POST', headers: headers(),
-      body: JSON.stringify({ action:'list', organization_id: currentOrgId })
+      body: JSON.stringify({ action:'list', session_token: sessionToken })
     });
     const data = await res.json();
     if(!data.success || !data.employees || data.employees.length === 0){
@@ -701,7 +701,7 @@ async function deleteEmployee(employeeId){
   try{
     const res = await fetch(fnCtx(EMPLOYEES_FN), {
       method:'POST', headers: headers(),
-      body: JSON.stringify({ action:'delete', employee_id: employeeId })
+      body: JSON.stringify({ action:'delete', session_token: sessionToken, employee_id: employeeId })
     });
     const data = await res.json();
     if(data.success) loadEmployees();
@@ -723,8 +723,8 @@ document.getElementById('btnAddEmployee').addEventListener('click', async ()=>{
  const res = await fetch(fnCtx(EMPLOYEES_FN), {   
       method:'POST', headers: headers(),
       body: JSON.stringify({
-        action:'create', organization_id: currentOrgId,
-        full_name, job_title, hire_date: hire_date || null,
+        action:'create', session_token: sessionToken,
+full_name, job_title, hire_date: hire_date || null,
         monthly_salary: monthly_salary ? parseFloat(monthly_salary) : null
       })
     });
