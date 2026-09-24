@@ -358,7 +358,7 @@ async function loadUserContext(){
 function loadArchiveAccounts(){
   fetch(fnCtx('archive-accounts-list'), {
     method:'POST', headers: headers(),
-    body: JSON.stringify({ requesting_user_id: userId })
+   body: JSON.stringify({ session_token: sessionToken }) 
   }).then(r=>r.json()).then(data=>{
       const sel = document.getElementById('archiveAccountSelect');
       if(!data.success){
