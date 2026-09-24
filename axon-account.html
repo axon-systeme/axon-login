@@ -350,7 +350,7 @@ async function loadUserContext(){
       document.getElementById('profilePhone').textContent = data.user.phone || 'غير مسجّل';
       document.getElementById('avatarLetter').textContent = (displayName || '?').charAt(0).toUpperCase();
       document.querySelectorAll('a[href="axon-invites.html"]').forEach(el => {
-  el.style.display = (data.user.role === 'admin') ? '' : 'none';
+  el.style.display = (data.user.role === 'admin') ? 'block' : 'none';
 });
     }
   }catch(e){ document.body.insertAdjacentHTML('afterbegin', `<div style="background:darkred;color:white;padding:10px;font-size:13px;">CATCH ERROR: ${e.message}</div>`); }
