@@ -866,7 +866,7 @@ async function loadMessages(){
   try{
     const res = await fetch(fnCtx(MESSAGES_FN), {
       method:'POST', headers: headers(),
-      body: JSON.stringify({ action:'list', user_id: userId })
+      body: JSON.stringify({ action:'list_messages', session_token: sessionToken })
     });
     const data = await res.json();
 
@@ -891,7 +891,7 @@ async function loadMessages(){
         if(!msg.is_read){
           fetch(fnCtx(MESSAGES_FN), {
             method:'POST', headers: headers(),
-            body: JSON.stringify({ action:'mark_read', message_id: msg.id })
+           body: JSON.stringify({ action: 'mark_read', session_token: sessionToken, message_id: msg.id }) 
           }).then(()=> loadMessages());
         }
       });
