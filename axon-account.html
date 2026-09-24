@@ -335,7 +335,7 @@ async function loadUserContext(){
   try{
     const res = await fetch(fnCtx('get-user-context'), {
       method:'POST', headers: headers(),
-      body: JSON.stringify({ user_id: userId })
+     body: JSON.stringify({ session_token: sessionToken }) 
     });
     const data = await res.json();
     if(data.success){
@@ -641,7 +641,7 @@ async function deleteDevice(credentialId){
   try{
     const res = await fetch(fnUrl(MANAGE_DEVICES_FN), {
       method:'POST', headers: headers(),
-      body: JSON.stringify({ action:'delete', user_id: userId, credential_id: credentialId })
+      body: JSON.stringify({ action:'delete', session_token: sessionToken, credential_id: credentialId })
     });
     const data = await res.json();
 
