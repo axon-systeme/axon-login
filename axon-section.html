@@ -334,7 +334,7 @@ async function loadDocs(){
 async function manage(action, payload){
   const r = await fetch(`${SUPABASE_URL}/functions/v1/swift-api`, {
     method:'POST', headers: headers(),
-    body: JSON.stringify({ action, user_id: userId, ...payload })
+    body: JSON.stringify({ action, session_token: sessionToken, ...payload })
   });
   let d = {};
   try{ d = await r.json(); }catch(e){}
