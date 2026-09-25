@@ -291,8 +291,10 @@ async function loadDocs(){
 
 async function loadAll(){
   try{
+    async function loadAll(){
+  try{
     const r = await fetch(fn('get-user-context'), {
-      method:'POST', headers: headers(), body: JSON.stringify({ user_id: userId })
+      method:'POST', headers: headers(), body: JSON.stringify({ session_token: sessionToken })
     });
     const d = await r.json();
     if(!d.success || !d.organization){ fatal('تعذر التعرف على مؤسستك. سجّل الدخول من جديد.'); return; }
