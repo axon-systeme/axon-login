@@ -252,10 +252,11 @@ function headers(){
 }
 
 const params = new URLSearchParams(window.location.search);
-const userId = params.get('uid') || sessionStorage.getItem('axon_user_id');
+const userId = sessionStorage.getItem('axon_user_id');
+const sessionToken = sessionStorage.getItem('axon_session_token');
 const accountId = params.get('id');
 
-if(!userId){
+if(!userId || !sessionToken){
   window.location.href = "axon-portal.html";
 }
 if(!accountId){
