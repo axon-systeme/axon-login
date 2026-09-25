@@ -817,9 +817,9 @@ document.getElementById('btnRegisterBiometric').addEventListener('click', async 
     }
 
     const optRes = await fetch(fnUrl(REGISTER_OPTIONS_FN), {
-      method:'POST', headers: headers(),
-      body: JSON.stringify({ user_id: userId })
-    });
+  method:'POST', headers: headers(),
+  body: JSON.stringify({ session_token: sessionToken })
+});
     const options = await optRes.json();
     if(options.error){
       showRegisterMsg(options.error, 'err');
@@ -828,14 +828,14 @@ document.getElementById('btnRegisterBiometric').addEventListener('click', async 
 
     const regResp = await SimpleWebAuthnBrowser.startRegistration(options);
 
-    const verifyRes = await fetch(fnUrl(REGISTER_VERIFY_FN), {
-      method:'POST', headers: headers(),
-      body: JSON.stringify({
-        user_id: userId,
-        attestation_response: regResp,
-        device_label: navigator.userAgent.slice(0, 60)
-      })
-    });
+  const verifyRes = await fetch(fnUrl(REGISTER_VERIFY_FN), {
+  method:'POST', headers: headers(),
+  body: JSON.stringify({
+    session_token: sessionToken,
+    attestation_response: regResp,
+    device_label: navigator.userAgent.slice(0, 60)
+  })
+});  
     const verifyData = await verifyRes.json();
 
     if(verifyData.success){
