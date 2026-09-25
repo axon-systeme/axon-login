@@ -282,7 +282,7 @@ document.getElementById('modeFormBtn').addEventListener('click', function(){
 async function loadArchiverInfo(){
   try{
     const res = await fetch(fn('get-user-context'), {
-      method:'POST', headers: headers(), body: JSON.stringify({ user_id: userId })
+      method:'POST', headers: headers(), body: JSON.stringify({ session_token: sessionToken })
     });
     const data = await res.json();
     if(data.success){
