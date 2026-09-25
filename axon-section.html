@@ -235,8 +235,9 @@ function fmtDate(x){
 }
 
 const params = new URLSearchParams(window.location.search);
-const userId = params.get('uid') || sessionStorage.getItem('axon_user_id');
-if(!userId){ window.location.href = 'axon-portal.html'; }
+const userId = sessionStorage.getItem('axon_user_id');
+const sessionToken = sessionStorage.getItem('axon_session_token');
+if(!userId || !sessionToken){ window.location.href = 'axon-portal.html'; }
 
 let ctx = { email: null, orgId: null, orgName: null, role: null };
 let sections = [], students = [], docs = [];
