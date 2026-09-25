@@ -293,34 +293,46 @@ async function loadAll(){
   try{
     async function loadAll(){
   try{
+  async function loadAll(){
+  let d;
+  try{
     const r = await fetch(fn('get-user-context'), {
       method:'POST', headers: headers(), body: JSON.stringify({ session_token: sessionToken })
     });
-    const d = await r.json();
-    if(!d.success || !d.organization){ fatal('تعذر التعرف على مؤسستك. سجّل الدخول من جديد.'); return; }
+    d = await r.json();
+  }catch(e){ fatal('تعذر الاتصال بالسيرفر: ' + e.message); return; }
+
+  if(!d.success || !d.organization){
+    fatal('تعذر التعرف على مؤسستك: ' + (d.error || 'بدون تفاصيل') + ' — سجّل الدخول من جديد.');
+    return;
+  }
+
+  try{
     ctx.email = d.user.email;
     ctx.role = d.user.role || null;
     ctx.orgId = d.organization.id;
     ctx.orgName = d.organization.name;
-  }catch(e){ fatal('تعذر الاتصال بالسيرفر.'); return; }
 
-  if(!ctx.role){
-    const u = await restRead(`users?id=eq.${encodeURIComponent(userId)}&select=role`);
-    ctx.role = u[0] ? u[0].role : null;
+    if(!ctx.role){
+      const u = await restRead(`users?id=eq.${encodeURIComponent(userId)}&select=role`);
+      ctx.role = u[0] ? u[0].role : null;
+    }
+    $('orgName').textContent = ctx.orgName || '';
+
+    const orgRows = await restRead(`organizations?id=eq.${encodeURIComponent(ctx.orgId)}&select=org_type,sector`);
+    const org = orgRows[0];
+    if(!org || (org.sector || org.org_type) !== 'school'){
+      fatal('هذه الصفحة خاصة بمؤسسات المدارس.');
+      return;
+    }
+
+    await refreshData();
+    await loadDocs();
+    render();
+  }catch(e){
+    fatal('خطأ أثناء تحميل بيانات المدرسة: ' + (e.message || 'غير معروف'));
   }
-  $('orgName').textContent = ctx.orgName || '';
-
-  const orgRows = await restRead(`organizations?id=eq.${encodeURIComponent(ctx.orgId)}&select=org_type,sector`);
-  const org = orgRows[0];
-  if(!org || (org.sector || org.org_type) !== 'school'){
-    fatal('هذه الصفحة خاصة بمؤسسات المدارس.');
-    return;
-  }
-
-  await refreshData();
-  await loadDocs();
-  render();
-}
+}  
 
 // ===== الإضافة والتعديل (عبر السيرفر) =====
 async function manage(action, payload){
