@@ -237,7 +237,8 @@ const REAL_SLUGS = {
   "login-biometric-verify": "rapid-api",
   "save-invoice-archive": "hyper-worker",
   "get-archive-data": "dynamic-task",
-  "save-photo-archive": "smart-service"
+  "save-photo-archive": "smart-service",
+  "get-dashboard-data": "clever-handler"
 };
 function fn(name){
   const slug = REAL_SLUGS[name] || name;
@@ -297,9 +298,12 @@ loadArchiverInfo();
 
 async function loadAccountName(){
   try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/accounts?id=eq.${accountId}&select=name`, { headers: headers() });
+    const res = await fetch(fn('get-dashboard-data'), {
+      method:'POST', headers: headers(),
+      body: JSON.stringify({ session_token: sessionToken, resource: 'account_name', account_id: accountId })
+    });
     const data = await res.json();
-    document.getElementById('accountNameLabel').textContent = (data[0] && data[0].name) || 'حساب غير معروف';
+    document.getElementById('accountNameLabel').textContent = data.success ? data.name : (data.error || 'حساب غير معروف');
   }catch(e){
     document.getElementById('accountNameLabel').textContent = 'تعذر تحميل اسم الحساب';
   }
