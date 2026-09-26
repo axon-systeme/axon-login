@@ -530,17 +530,17 @@ document.getElementById('confirmFormBtn').addEventListener('click', async functi
 
     btn.textContent = 'جاري الحفظ...';
 
-    const invRes = await fetch(fn('save-invoice-archive'), {
-      method: 'POST',
-      headers: headers(),
-      body: JSON.stringify({
-        user_id: userId,
-        account_id: accountId,
-        invoice_number: invoiceNumber,
-        items: items,
-        total_value: totalValue
-      })
-    });
+   const invRes = await fetch(fn('save-invoice-archive'), {
+  method: 'POST',
+  headers: headers(),
+  body: JSON.stringify({
+    session_token: sessionToken,
+    account_id: accountId,
+    invoice_number: invoiceNumber,
+    items: items,
+    total_value: totalValue
+  })
+}); 
     const invJson = await invRes.json();
     if(!invJson.success){
       throw new Error(invJson.error || 'فشل إنشاء الفاتورة.');
