@@ -463,13 +463,12 @@ async function loadSchool(){
 async function applyOrgModules(){
   let allowed = [];
   try{
-    const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/organizations?id=eq.${currentOrgId}&select=org_type,sector`,
-      { headers: { apikey: ANON_KEY } }
-    );
-    const rows = await r.json();
-    const org = Array.isArray(rows) ? rows[0] : null;
-    allowed = MODULES[org && (org.sector || org.org_type)] || [];
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/clever-handler`, {
+      method:'POST', headers: headers(),
+      body: JSON.stringify({ session_token: sessionToken, resource: 'org_info' })
+    });
+    const d = await r.json();
+    allowed = MODULES[d.success && (d.sector || d.org_type)] || [];
   }catch(e){ allowed = []; }
 
   const emp  = allowed.includes('employees');
