@@ -493,7 +493,10 @@ async function applyOrgModules(){
   if(secs || stud) loadSchool();
 }
 
-loadUserContext().then(applyOrgModules);
+loadUserContext().then(applyOrgModules).then(()=>{
+  const loader = document.getElementById('pageLoader');
+  if(loader) loader.style.display = 'none';
+});
 
 document.getElementById('btnAddAccount').addEventListener('click', async ()=>{
   const full_name = document.getElementById('newAccName').value.trim();
