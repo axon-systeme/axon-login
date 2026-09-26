@@ -821,17 +821,17 @@ $('confirmUpload').addEventListener('click', async ()=>{
 
     btn.textContent = 'جاري الأرشفة...';
     const r = await fetch(fn('save-photo-archive'), {
-      method:'POST', headers: headers(),
-      body: JSON.stringify({
-        user_id: userId,
-        account_id: archiveAccountId,
-        image_path: path,
-        note: $('note').value.trim() || null,
-        person_id: upload.personId || null,
-        section_id: upload.sectionId || null,
-        doc_type: upload.type
-      })
-    });
+  method:'POST', headers: headers(),
+  body: JSON.stringify({
+    session_token: sessionToken,
+    account_id: archiveAccountId,
+    image_path: path,
+    note: $('note').value.trim() || null,
+    person_id: upload.personId || null,
+    section_id: upload.sectionId || null,
+    doc_type: upload.type
+  })
+});
     const j = await r.json();
     if(!j.success) throw new Error(j.error || 'فشل تسجيل الأرشفة.');
 
