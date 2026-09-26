@@ -268,11 +268,18 @@ function toast(text, isErr){
 
 // ===== تحميل البيانات =====
 async function refreshData(){
-  const oid = encodeURIComponent(ctx.orgId);
-  [sections, students] = await Promise.all([
-    restRead(`sections?organization_id=eq.${oid}&select=id,name,teacher_name,teacher_phone,education_level&order=name`),
-    restRead(`persons?organization_id=eq.${oid}&role=eq.student&select=id,full_name,section_id,birth_date,guardian_name,guardian_phone&order=full_name`)
+  const [secsRes, studsRes] = await Promise.all([
+    fetch(`${SUPABASE_URL}/functions/v1/clever-handler`, {
+      method:'POST', headers: headers(),
+      body: JSON.stringify({ session_token: sessionToken, resource: 'sections' })
+    }).then(r=>r.json()),
+    fetch(`${SUPABASE_URL}/functions/v1/clever-handler`, {
+      method:'POST', headers: headers(),
+      body: JSON.stringify({ session_token: sessionToken, resource: 'persons' })
+    }).then(r=>r.json())
   ]);
+  sections = secsRes.success ? secsRes.sections : [];
+  students = studsRes.success ? studsRes.persons : [];
 }
 
 async function loadDocs(){
@@ -310,13 +317,19 @@ async function loadDocs(){
     ctx.orgName = d.organization.name;
 
     if(!ctx.role){
-      const u = await restRead(`users?id=eq.${encodeURIComponent(userId)}&select=role`);
-      ctx.role = u[0] ? u[0].role : null;
+      const ur = await fetch(`${SUPABASE_URL}/functions/v1/clever-handler`, {
+        method:'POST', headers: headers(),
+        body: JSON.stringify({ session_token: sessionToken, resource: 'user_role' })
+      }).then(r=>r.json());
+      ctx.role = ur.success ? ur.role : null;
     }
     $('orgName').textContent = ctx.orgName || '';
 
-    const orgRows = await restRead(`organizations?id=eq.${encodeURIComponent(ctx.orgId)}&select=org_type,sector`);
-    const org = orgRows[0];
+    const orgInfo = await fetch(`${SUPABASE_URL}/functions/v1/clever-handler`, {
+      method:'POST', headers: headers(),
+      body: JSON.stringify({ session_token: sessionToken, resource: 'org_info' })
+    }).then(r=>r.json());
+    const org = orgInfo.success ? orgInfo : null;
     if(!org || (org.sector || org.org_type) !== 'school'){
       fatal('هذه الصفحة خاصة بمؤسسات المدارس.');
       return;
