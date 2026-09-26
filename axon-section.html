@@ -282,7 +282,7 @@ async function loadDocs(){
   try{
     const r = await fetch(fn('get-archive-data'), {
       method:'POST', headers: headers(),
-      body: JSON.stringify({ user_id: userId, account_id: archiveAccountId })
+      body: JSON.stringify({ session_token: sessionToken, account_id: archiveAccountId })
     });
     const d = await r.json();
     docs = (d.success && Array.isArray(d.photos)) ? d.photos : [];
