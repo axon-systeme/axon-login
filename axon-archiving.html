@@ -392,15 +392,15 @@ document.getElementById('confirmBtn').addEventListener('click', async function()
     }
 
    const insertRes = await fetch(fn('save-photo-archive'), {
-      method:'POST',
-      headers: headers(),
-      body: JSON.stringify({
-        user_id: userId,
-        account_id: accountId,
-        image_path: fileName,
-        note: note || null
-      })
-    });
+  method:'POST',
+  headers: headers(),
+  body: JSON.stringify({
+    session_token: sessionToken,
+    account_id: accountId,
+    image_path: fileName,
+    note: note || null
+  })
+});
     const insertJson = await insertRes.json();
     if(!insertJson.success){
       throw new Error(insertJson.error || 'فشل تسجيل الأرشفة.');
