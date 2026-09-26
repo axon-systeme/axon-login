@@ -443,10 +443,18 @@ async function restRead(path){
 }
 
 async function loadSchool(){
-  const [secs, studs] = await Promise.all([
-    restRead(`sections?organization_id=eq.${currentOrgId}&select=id,name,teacher_name&order=name`),
-    restRead(`persons?organization_id=eq.${currentOrgId}&role=eq.student&select=id,full_name,section_id&order=full_name`)
+  const [secsRes, studsRes] = await Promise.all([
+    fetch(`${SUPABASE_URL}/functions/v1/clever-handler`, {
+      method:'POST', headers: headers(),
+      body: JSON.stringify({ session_token: sessionToken, resource: 'sections' })
+    }).then(r=>r.json()),
+    fetch(`${SUPABASE_URL}/functions/v1/clever-handler`, {
+      method:'POST', headers: headers(),
+      body: JSON.stringify({ session_token: sessionToken, resource: 'persons' })
+    }).then(r=>r.json())
   ]);
+  const secs = secsRes.success ? secsRes.sections : [];
+  const studs = studsRes.success ? studsRes.persons : [];
   const nameOf = {}, counts = {};
   secs.forEach(s => { nameOf[s.id] = s.name; counts[s.id] = 0; });
   studs.forEach(p => { if(counts[p.section_id] !== undefined) counts[p.section_id]++; });
