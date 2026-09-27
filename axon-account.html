@@ -922,6 +922,57 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
     document.getElementById(btn.dataset.tab).classList.add('active');
     btn.classList.add('active');
+    // ===== نظام الترجمة الأوتوماتيكي =====
+const I18N_FN = "clever-service";
+function currentLang(){ return localStorage.getItem('axon_lang') || 'ar'; }
+
+function collectTextNodes(root){
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(node){
+      const t = node.nodeValue.trim();
+      if(!t) return NodeFilter.FILTER_REJECT;
+      if(!/[\u0600-\u06FF]/.test(t)) return NodeFilter.FILTER_REJECT;
+      const tag = node.parentElement ? node.parentElement.tagName : '';
+      if(tag === 'SCRIPT' || tag === 'STYLE') return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  const nodes = [];
+  let n;
+  while((n = walker.nextNode())) nodes.push(n);
+  return nodes;
+}
+
+async function translatePage(){
+  const lang = currentLang();
+  if(lang === 'ar') return;
+
+  const nodes = collectTextNodes(document.body);
+  const texts = [...new Set(nodes.map(n => n.nodeValue.trim()))];
+  if(texts.length === 0) return;
+
+  try{
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/${I18N_FN}`, {
+      method:'POST', headers: headers(),
+      body: JSON.stringify({ session_token: sessionToken, lang, texts })
+    });
+    const data = await res.json();
+    if(!data.success) return;
+
+    nodes.forEach(node => {
+      const orig = node.nodeValue.trim();
+      const translated = data.translations[orig];
+      if(translated) node.nodeValue = node.nodeValue.replace(orig, translated);
+    });
+  }catch(e){
+    console.error('translation error', e);
+  }
+}
+
+function setLang(lang){
+  localStorage.setItem('axon_lang', lang);
+  location.reload();
+}
   });
 });
 </script>
