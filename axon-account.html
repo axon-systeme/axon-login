@@ -963,7 +963,8 @@ async function loadMessages(){
     listEl.innerHTML = '<div class="empty">تعذر تحميل الرسائل.</div>';
   }
 }
-
+document.getElementById('langSelect').value = currentLang();
+setTimeout(translatePage, 1200);
 loadMessages();
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
