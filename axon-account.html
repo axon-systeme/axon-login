@@ -96,7 +96,15 @@
 </style>
 </head>
 <body>
-document.getElementById('langSelect').value = currentLang();
+
+<div style="position: fixed; top: 14px; left: 14px; z-index: 999;">
+  <select id="langSelect" style="padding:6px 10px; border-radius:6px; background:#161b22; color:#e6edf3; border:1px solid #303030;" onchange="setLang(this.value)">
+    <option value="ar">🇩🇿 العربية</option>
+    <option value="fr">🇫🇷 Français</option>
+    <option value="en">🇬🇧 English</option>
+  </select>
+</div>
+
 <div id="pageLoader" style="position:fixed;inset:0;background:var(--ink);z-index:9999;display:flex;align-items:center;justify-content:center;color:var(--slate);font-size:0.9rem;">جاري التحميل...</div>
 
 <div></div> <class="wrap">
