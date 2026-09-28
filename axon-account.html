@@ -355,12 +355,23 @@ function collectTextNodes(root){
   return nodes;
 }
 
+function collectPlaceholderEls(root){
+  return Array.from(root.querySelectorAll('[placeholder]'))
+    .filter(el => /[\u0600-\u06FF]/.test(el.getAttribute('placeholder')));
+}
+
 async function translatePage(){
   const lang = currentLang();
   if(lang === 'ar') return;
 
   const nodes = collectTextNodes(document.body);
-  const texts = [...new Set(nodes.map(n => n.nodeValue.trim()))];
+  const placeholderEls = collectPlaceholderEls(document.body);
+
+  const allTexts = [
+    ...nodes.map(n => n.nodeValue.trim()),
+    ...placeholderEls.map(el => el.getAttribute('placeholder').trim())
+  ];
+  const texts = [...new Set(allTexts)];
   if(texts.length === 0) return;
 
   try{
@@ -375,6 +386,12 @@ async function translatePage(){
       const orig = node.nodeValue.trim();
       const translated = data.translations[orig];
       if(translated) node.nodeValue = node.nodeValue.replace(orig, translated);
+    });
+
+    placeholderEls.forEach(el => {
+      const orig = el.getAttribute('placeholder').trim();
+      const translated = data.translations[orig];
+      if(translated) el.setAttribute('placeholder', translated);
     });
   }catch(e){
     console.error('translation error', e);
