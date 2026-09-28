@@ -111,7 +111,14 @@
   
 <header>
     <img src="axon-logo.png" alt="AXON" style="height:38px; width:auto;">
-    <button class="notif-btn" onclick="document.querySelector('[data-tab=\'tabNotifications\']')?.click() || (function(){document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));document.getElementById('tabNotifications').classList.add('active');})()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;">🔔</button>
+    <div style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+      <select id="langSelect" style="padding:4px 8px; border-radius:6px; background:#161b22; color:#e6edf3; border:1px solid #303030; font-size:0.7rem;" onchange="setLang(this.value)">
+        <option value="ar">🇩🇿 AR</option>
+        <option value="fr">🇫🇷 FR</option>
+        <option value="en">🇬🇧 EN</option>
+      </select>
+      <button class="notif-btn" onclick="document.querySelector('[data-tab=\'tabNotifications\']')?.click() || (function(){document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));document.getElementById('tabNotifications').classList.add('active');})()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;">🔔</button>
+    </div>
 </header>
 
       
