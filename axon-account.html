@@ -245,10 +245,15 @@
 <div class="card" id="cardAdminReset" style="display:none;">
   <h2>إعادة تعيين كلمة سر</h2>
   <div class="sub">للمستخدمين اللي نسيو كلمة السر. تتولد كلمة مؤقتة وتعطيها له مباشرة.</div>
-  <select id="resetUserSelect" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--ink-3);background:var(--ink);color:var(--paper);">
-    <option value="">جاري التحميل...</option>
-  </select>
-  <button class="btn" id="btnResetPassword" style="width:100%;margin-top:10px;">توليد كلمة سر مؤقتة</button>
+ <div class="field">
+      <label>إيميل المستخدم</label>
+      <input type="email" id="resetUserEmail" placeholder="name@example.com" autocomplete="off" style="direction:ltr;">
+    </div>
+    <div class="field">
+      <label>كلمة السر الجديدة (اختياري)</label>
+      <input type="text" id="resetNewPassword" placeholder="إذا تركتها فارغة تتولد تلقائيًا" autocomplete="off" style="direction:ltr;">
+    </div> 
+  <button class="btn" id="btnResetPassword" style="width:100%;margin-top:10px;">تعيين كلمة السر</button>
   <div id="resetResult" style="display:none;margin-top:12px;padding:12px;border:1px dashed var(--brass);border-radius:8px;text-align:center;font-family:monospace;font-size:1.1rem;letter-spacing:2px;user-select:all;direction:ltr;"></div>
   <div class="msg" id="msgReset"></div>
 </div>
