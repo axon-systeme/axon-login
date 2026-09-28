@@ -443,7 +443,6 @@ async function loadUserContext(){
       });
       if(data.user.role === 'admin'){
         document.getElementById('cardAdminReset').style.display = '';
-        loadResetUsers();
       }
     }
   }catch(e){ document.body.insertAdjacentHTML('afterbegin', `<div style="background:darkred;color:white;padding:10px;font-size:13px;">CATCH ERROR: ${e.message}</div>`); }
@@ -1037,26 +1036,32 @@ async function loadResetUsers(){
 }
 
 document.getElementById('btnResetPassword').addEventListener('click', async ()=>{
-  const targetId = document.getElementById('resetUserSelect').value;
+  const email = document.getElementById('resetUserEmail').value.trim();
+  const customPw = document.getElementById('resetNewPassword').value;
   const msgEl = document.getElementById('msgReset');
   const box = document.getElementById('resetResult');
   box.style.display = 'none';
 
-  if(!targetId){
-    msgEl.textContent = 'اختر المستخدم أولاً.';
+  if(!email){
+    msgEl.textContent = 'اكتب إيميل المستخدم.';
     msgEl.className = 'msg show err';
     return;
   }
-  if(!confirm('راح تتبدل كلمة سر هذا المستخدم ولن تعمل القديمة. تكمل؟')) return;
+  if(!confirm('راح تتبدل كلمة سر ' + email + ' ولن تعمل القديمة. تكمل؟')) return;
 
   const btn = document.getElementById('btnResetPassword');
   btn.disabled = true;
   try{
-    const data = await adminResetCall({ action:'reset', target_user_id: targetId });
+    const data = await adminResetCall({
+      action:'reset',
+      target_email: email,
+      new_password: customPw || undefined
+    });
     if(data.success){
       box.textContent = data.temp_password;
       box.style.display = 'block';
-      msgEl.textContent = 'انسخ كلمة السر وأعطها للمستخدم الآن. ما راح تظهر مرة أخرى.';
+      document.getElementById('resetNewPassword').value = '';
+      msgEl.textContent = 'تبدلت كلمة السر. انسخها وأعطها للمستخدم الآن، ما راح تظهر مرة أخرى.';
       msgEl.className = 'msg show ok';
     }else{
       msgEl.textContent = data.error || 'تعذرت العملية.';
