@@ -447,6 +447,7 @@ function loadArchiveAccounts(){
         opt.textContent = a.name;
         sel.appendChild(opt);
       });
+      if(currentLang() !== 'ar') translatePage();
     }).catch(()=>{
       document.getElementById('archiveAccountSelect').innerHTML = '<option value="">تعذر التحميل</option>';
     });
