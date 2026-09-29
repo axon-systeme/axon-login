@@ -208,6 +208,7 @@
   <div class="icon">✓</div>
   <div class="step-title">تم التحقق من هويتك</div>
   <div class="step-sub">مرحبا بعودتك إلى AXON.</div>
+  </div>
 <!-- تبويب: الدعم -->
 <div class="panel" id="panelSupport">
   <div class="step-title">الدعم الفني</div>
@@ -238,7 +239,7 @@
   مؤسسة جديدة؟ <a href="axon-signup.html" style="color:var(--brass-bright); font-weight:600; text-decoration:none;">سجّلها من هنا</a>
   <br><a href="#" id="linkSupport" style="color:var(--slate); text-decoration:underline;">تحتاج مساعدة؟ تواصل مع الدعم</a>
 </div>
-</script>   
+  
 <script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@10/dist/bundle/index.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script src="translations.js?v=5"></script> 
@@ -281,6 +282,7 @@ function showPanel(id){
   document.querySelectorAll('.panel').forEach(p=>{
     p.className = 'panel' + (p.id === id ? ' active' : '') + (p.id === 'panelSuccess' ? ' success' : '');
   });
+  }
   function openSupport(){
   document.querySelectorAll('.tab').forEach(x=> x.className = 'tab');
   showPanel('panelSupport');
@@ -322,7 +324,6 @@ document.getElementById('btnSupport').addEventListener('click', async ()=>{
     btn.disabled = false;
   }
 });
-}
 
 function goToDashboard(uid, token){
   sessionStorage.setItem('axon_user_id', uid);
