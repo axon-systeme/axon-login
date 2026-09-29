@@ -208,13 +208,36 @@
   <div class="icon">✓</div>
   <div class="step-title">تم التحقق من هويتك</div>
   <div class="step-sub">مرحبا بعودتك إلى AXON.</div>
+<!-- تبويب: الدعم -->
+<div class="panel" id="panelSupport">
+  <div class="step-title">الدعم الفني</div>
+  <div class="step-sub">ما قدرتش تدخل؟ ابعث مشكلتك للدعم.</div>
+  <div class="field">
+    <label>الاسم (اختياري)</label>
+    <input type="text" id="supName" maxlength="80" autocomplete="name">
+  </div>
+  <div class="field">
+    <label>البريد الإلكتروني (باش نرد عليك)</label>
+    <input type="email" id="supEmail" placeholder="name@example.com" autocomplete="email">
+  </div>
+  <div class="field">
+    <label>الموضوع</label>
+    <input type="text" id="supSubject" maxlength="120">
+  </div>
+  <div class="field">
+    <label>الرسالة</label>
+    <textarea id="supMessage" maxlength="2000" rows="4" style="width:100%;background:var(--ink);border:1px solid var(--ink-3);border-radius:9px;padding:11px 12px;color:var(--paper);font-family:inherit;font-size:0.92rem;"></textarea>
+  </div>
+  <input type="text" id="supWebsite" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;opacity:0;">
+  <button class="btn" id="btnSupport">إرسال</button>
+  <button class="btn ghost" id="btnSupportBack" type="button">رجوع لتسجيل الدخول</button>
+  <div class="msg" id="msgSupport"></div>
 </div>
-    <div class="footer-note">
+
+<div class="footer-note">
   مؤسسة جديدة؟ <a href="axon-signup.html" style="color:var(--brass-bright); font-weight:600; text-decoration:none;">سجّلها من هنا</a>
+  <br><a href="#" id="linkSupport" style="color:var(--slate); text-decoration:underline;">تحتاج مساعدة؟ تواصل مع الدعم</a>
 </div>
- <script>
-   
-};
 </script>   
 <script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@10/dist/bundle/index.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
@@ -229,6 +252,7 @@ const REAL_SLUGS = {
   "login-biometric-verify": "rapid-api",
   "login-qr-generate": "hyper-responder",
   "qr-login-confirm": "smooth-service",
+  "support-ticket-create": "bright-function",
   "qr-login-status": "smooth-action",
 };
  function t(key){
@@ -257,6 +281,47 @@ function showPanel(id){
   document.querySelectorAll('.panel').forEach(p=>{
     p.className = 'panel' + (p.id === id ? ' active' : '') + (p.id === 'panelSuccess' ? ' success' : '');
   });
+  function openSupport(){
+  document.querySelectorAll('.tab').forEach(x=> x.className = 'tab');
+  showPanel('panelSupport');
+}
+document.getElementById('linkSupport').addEventListener('click', (e)=>{ e.preventDefault(); openSupport(); });
+document.getElementById('btnSupportBack').addEventListener('click', ()=>{
+  document.querySelector('.tab[data-tab="password"]').className = 'tab active';
+  showPanel('panelPassword');
+});
+if(new URLSearchParams(location.search).get('support')) openSupport();
+
+document.getElementById('btnSupport').addEventListener('click', async ()=>{
+  const name = document.getElementById('supName').value.trim();
+  const email = document.getElementById('supEmail').value.trim();
+  const subject = document.getElementById('supSubject').value.trim();
+  const message = document.getElementById('supMessage').value.trim();
+  const website = document.getElementById('supWebsite').value;
+  if(!email || !subject || !message){
+    showMsg('msgSupport', 'عمّر الإيميل والموضوع والرسالة.', 'err');
+    return;
+  }
+  const btn = document.getElementById('btnSupport');
+  btn.disabled = true;
+  try{
+    const res = await fetch(fn('support-ticket-create'), {
+      method:'POST', headers: headers(),
+      body: JSON.stringify({ name, email, subject, message, website })
+    });
+    const data = await res.json();
+    if(data.success){
+      ['supName','supEmail','supSubject','supMessage'].forEach(id=> document.getElementById(id).value = '');
+      showMsg('msgSupport', 'وصلت رسالتك للدعم.', 'ok');
+    }else{
+      showMsg('msgSupport', data.error || 'تعذر الإرسال.', 'err');
+    }
+  }catch(e){
+    showMsg('msgSupport', 'تعذر الاتصال بالسيرفر.', 'err');
+  }finally{
+    btn.disabled = false;
+  }
+});
 }
 
 function goToDashboard(uid, token){
@@ -330,7 +395,7 @@ showMsg('msgPassword', t('err_wrong_password') + attemptsMsg, 'err');
 document.getElementById('btnBiometric').addEventListener('click', async ()=>{
   const email = document.getElementById('bioEmail').value.trim();
   if(!email){
-    showMsg('msgQr', t('err_missing_email'), 'err');
+    showMsg('msgBiometric', t('err_missing_email'), 'err');
     return;
   }
   const btn = document.getElementById('btnBiometric');
