@@ -961,7 +961,7 @@ document.getElementById('btnRegisterBiometric').addEventListener('click', async 
 
     if(verifyData.success){
       showRegisterMsg('تم تسجيل البصمة بنجاح على هذا الجهاز.', 'ok');
-      document.getElementById('cardRegisterBiometric').style.display = 'none';
+      
       loadDevices();
     } else {
       showRegisterMsg(verifyData.error || 'فشل تسجيل البصمة.', 'err');
