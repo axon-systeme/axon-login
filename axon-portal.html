@@ -6,6 +6,15 @@
 <title>AXON — بوابة الدخول</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+window.addEventListener('error', function(e){
+  var el = document.getElementById('pageLoader'); if(el) el.remove();
+  var box = document.createElement('div');
+  box.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:100000;background:#7a1f1f;color:#fff;padding:10px;font-size:12px;direction:ltr;';
+  box.textContent = 'JS ERROR: ' + e.message + ' (line ' + e.lineno + ')';
+  (document.body || document.documentElement).appendChild(box);
+});
+</script>
 <style>
   :root{
     --ink:#14171c; --ink-2:#1b1f26; --ink-3:#232833;
