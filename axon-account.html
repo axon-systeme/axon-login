@@ -6,8 +6,9 @@
 <title>AXON — لوحة الحساب</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
   <script>document.documentElement.dataset.theme = localStorage.getItem('axon_theme') || 'dark';</script>
+<style>
+  
   :root{
     --ink:#14171c; --ink-2:#1b1f26; --ink-3:#232833;
     --brass:#b08d57; --brass-bright:#d4ac6e;
@@ -18,7 +19,7 @@
   body{
     background: radial-gradient(1200px 800px at 50% -10%, #1e2430 0%, var(--ink) 55%), var(--ink);
     color:var(--paper); font-family:'IBM Plex Sans Arabic', sans-serif;
-    min-height:100vh; padding:24px 16px 60px; -webkit-font-smoothing:antialiased;
+   min-height:100vh; padding:24px 16px 110px; -webkit-font-smoothing:antialiased; 
   }
   .wrap{ max-width:520px; margin:0 auto; }
   header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; }
@@ -241,6 +242,16 @@
       </div>
     </div>
   </div>
+  </div>
+
+<div class="tab-section" id="tabSettings">
+  <div class="card">
+    <div class="set-item" id="btnTheme"><span>المظهر</span><span id="themeLabel">ليلي 🌙</span></div>
+    <div class="set-item" data-open="tabSupport"><span>الدعم الفني</span><span>›</span></div>
+    <div class="set-item" data-open="tabPrivacy"><span>سياسة الخصوصية</span><span>›</span></div>
+    <div class="set-item" data-open="tabTerms"><span>القوانين والسياسات</span><span>›</span></div>
+  </div>
+  <div class="set-group">الأمان وكلمة السر</div>
 <a href="axon-invites.html" style="display:block; text-align:center; text-decoration:none; margin-top:12px; padding:11px; border-radius:8px; background:linear-gradient(180deg,var(--brass-bright),var(--brass)); color:#14171c; font-weight:600; font-size:0.88rem;">روابط الدعوة</a>
   <div class="card">
     <h2>إضافة بصمة جديدة</h2>
@@ -289,7 +300,13 @@
   </div>
 
   <button class="btn" id="btnLogoutProfile" style="width:100%; margin-top:16px; background:none;">تسجيل الخروج</button>
-</div>      
+</div>  
+  <div class="tab-section" id="tabPrivacy">
+  <div class="card"><h2>سياسة الخصوصية</h2><div class="sub">سيُضاف النص الكامل قريبًا.</div></div>
+</div>
+<div class="tab-section" id="tabTerms">
+  <div class="card"><h2>القوانين والسياسات</h2><div class="sub">سيُضاف النص الكامل قريبًا.</div></div>
+</div>
 <div class="tab-section" id="tabMessages">
   <div class="card">
     <h2>البريد</h2>
@@ -325,26 +342,31 @@
       </div>
     </div>
 
-     <div class="bottom-bar">
-  <button class="tab-btn" data-tab="tabHome">
-    <span class="icon">🏠</span><span>الرئيسية</span>
-  </button>
-  <button class="tab-btn" data-tab="tabSupport">
-    <span class="icon">🎧</span><span>الدعم</span>
-  </button>
-  <button class="tab-btn" data-tab="tabMessages">
-    <span class="icon">✉️</span><span>البريد</span>
-  </button>
-   <button class="tab-btn" data-tab="tabArchiving">
-        <span class="icon">📁</span><span>الأرشفة</span>
-      </button>
-  <button class="tab-btn active" data-tab="tabProfile">
-    <span class="icon">👤</span><span>البروفايل</span>
-  </button>
-</div>   
+      <div class="bottom-bar">
+  <button class="tab-btn" data-tab="tabHome"><span class="icon">🏠</span><span>الرئيسية</span></button>
+  <button class="tab-btn" data-tab="tabMessages"><span class="icon">✉️</span><span>البريد</span></button>
+  <button class="tab-btn" data-tab="tabArchiving"><span class="icon">📁</span><span>الأرشفة</span></button>
+  <button class="tab-btn active" data-tab="tabProfile"><span class="icon">👤</span><span>الملف الشخصي</span></button>
+  <button class="tab-btn" data-tab="tabSettings"><span class="icon">⚙️</span><span>الإعدادات</span></button>
+</div> 
 <script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@10/dist/bundle/index.umd.min.js"></script>
 <script>
-  
+ document.querySelectorAll('[data-open]').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));
+    document.getElementById(el.dataset.open).classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab==='tabSettings'));
+  });
+});
+function applyTheme(t){
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem('axon_theme', t);
+  document.getElementById('themeLabel').textContent = t === 'light' ? 'نهاري ☀️' : 'ليلي 🌙';
+}
+document.getElementById('btnTheme').addEventListener('click', ()=>{
+  applyTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
+});
+applyTheme(localStorage.getItem('axon_theme') || 'dark'); 
 const SUPABASE_URL = "https://tmizzjieyeqbcxuxoucw.supabase.co";
 const ANON_KEY = "sb_publishable_0MXFCqGL0eqkteVozjLtDQ_VCmGeXhM";
 
@@ -461,6 +483,7 @@ async function loadUserContext(){
       document.getElementById('profileName').textContent = displayName;
       document.getElementById('profileOrg').textContent = currentOrgName || 'بدون مؤسسة';
       document.getElementById('profilePhone').textContent = data.user.phone || 'غير مسجّل';
+      document.getElementById('profileEmail').textContent = data.user.email || '—';
       document.getElementById('avatarLetter').textContent = (displayName || '?').charAt(0).toUpperCase();
       document.querySelectorAll('a[href="axon-invites.html"]').forEach(el => {
         el.style.display = (data.user.role === 'admin') ? 'block' : 'none';
