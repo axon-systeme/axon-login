@@ -369,7 +369,11 @@ try{
       body: JSON.stringify({ email, password })
     });
     const data = await res.json();
-
+if(data.success && data.must_change_password){
+      sessionStorage.setItem('axon_pw_change_token', data.session_token);
+      window.location.href = 'axon-change-password.html';
+      return;
+    }
     if(data.success){
       goToDashboard(data.user_id, data.session_token);
       return;
