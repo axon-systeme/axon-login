@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AXON — استرجاع الحساب</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#14171c;color:#ece7dc;font-family:sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;}
+  .card{background:#1b1f26;border:1px solid #232833;border-radius:14px;padding:24px;max-width:420px;width:100%;}
+  h2{margin-bottom:6px;font-size:1.15rem;} p{font-size:0.82rem;color:#7d8493;margin-bottom:14px;line-height:1.6;}
+  label{display:block;font-size:0.8rem;color:#7d8493;margin:12px 0 6px;}
+  input{width:100%;background:#14171c;border:1px solid #232833;border-radius:9px;padding:11px 12px;color:#ece7dc;font-size:0.92rem;direction:ltr;}
+  button,.lnk{display:block;width:100%;margin-top:14px;padding:12px;border:none;border-radius:9px;font-weight:600;font-size:0.92rem;background:linear-gradient(135deg,#1a5fb4,#4a9eff);color:#fff;cursor:pointer;text-align:center;text-decoration:none;}
+  button.ghost{background:none;border:1px solid #232833;color:#7d8493;}
+  button:disabled{opacity:.6;}
+  .box{padding:12px;border:1px dashed #b08d57;border-radius:8px;text-align:center;font-family:monospace;letter-spacing:1px;user-select:all;direction:ltr;word-break:break-all;margin:10px 0;}
+  #msg{margin-top:12px;font-size:0.8rem;padding:9px 11px;border-radius:8px;display:none;}
+  #msg.err{display:block;background:rgba(176,101,79,.15);color:#e3a794;}
+  #msg.ok{display:block;background:rgba(92,145,121,.15);color:#9fd2b8;}
+  .hide{display:none;}
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>استرجاع الحساب</h2>
+
+  <div id="viewStart">
+    <p>أدخل إيميلك وكود تطبيق المصادقة (6 أرقام) أو أحد رموز الاسترجاع.</p>
+    <label>البريد الإلكتروني</label>
+    <input type="email" id="em" autocomplete="email">
+    <label>كود المصادقة أو رمز الاسترجاع</label>
+    <input type="text" id="code" autocomplete="one-time-code">
+    <button id="btnStart">إرسال الطلب</button>
+    <button class="ghost" id="btnHave">عندي رمز طلب سابق</button>
+  </div>
+
+  <div id="viewToken" class="hide">
+    <p>تم تسجيل طلبك. <b>احفظ رمز الطلب هذا الآن</b>، تحتاجه لمتابعة الطلب واستلام كلمة السر المؤقتة، وما يظهرش مرة أخرى.</p>
+    <div class="box" id="tokBox"></div>
+    <p id="eligibleTxt"></p>
+    <button id="btnTokCopy">نسخ الرمز</button>
+    <button class="ghost" id="btnToCheck">متابعة حالة الطلب</button>
+  </div>
+
+  <div id="viewCheck" class="hide">
+    <label>رمز الطلب</label>
+    <input type="text" id="tokIn">
+    <button id="btnCheck">تحقق من الحالة</button>
+    <button id="btnClaim" class="hide">استلام كلمة السر المؤقتة</button>
+    <div class="box hide" id="tempBox"></div>
+    <a class="lnk hide" id="toLogin" href="axon-portal.html">الذهاب لتسجيل الدخول</a>
+    <button class="ghost" id="btnBack">رجوع</button>
+  </div>
+
+  <div id="msg"></div>
+</div>
+<script>
+const SUPABASE_URL = "https://tmizzjieyeqbcxuxoucw.supabase.co";
+const ANON_KEY = "sb_publishable_0MXFCqGL0eqkteVozjLtDQ_VCmGeXhM";
+const FN = `${SUPABASE_URL}/functions/v1/SLUG_HERE`;
+const $ = (id)=> document.getElementById(id);
+function show(t, c){ const m = $('msg'); m.textContent = t; m.className = c; }
+function view(v){ ['viewStart','viewToken','viewCheck'].forEach(x=> $(x).classList.toggle('hide', x !== v)); $('msg').className = ''; }
+async function call(payload){
+  const r = await fetch(FN, { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization':`Bearer ${ANON_KEY}`, 'apikey': ANON_KEY }, body: JSON.stringify(payload) });
+  return r.json();
+}
+function fmt(iso){ return new Date(iso).toLocaleString('ar', { dateStyle:'medium', timeStyle:'short' }); }
+
+$('btnStart').addEventListener('click', async ()=>{
+  const email = $('em').value.trim(), code = $('code').value.trim();
+  if(!email || !code){ show('عمّر الخانتين.', 'err'); return; }
+  const b = $('btnStart'); b.disabled = true;
+  try{
+    const d = await call({ action:'start', email, code });
+    if(!d.success){ show(d.error || 'تعذرت العملية.', 'err'); return; }
+    localStorage.setItem('axon_claim_token', d.claim_token);
+    $('tokBox').textContent = d.claim_token;
+    $('eligibleTxt').textContent = `مدة الانتظار ${d.wait_hours} ساعة. أقرب وقت للاستلام بعد الموافقة: ${fmt(d.eligible_at)}.`;
+    $('code').value = '';
+    view('viewToken');
+  }catch(e){ show('تعذر الاتصال بالسيرفر.', 'err'); }
+  finally{ b.disabled = false; }
+});
+$('btnTokCopy').addEventListener('click', async ()=>{
+  try{ await navigator.clipboard.writeText($('tokBox').textContent); show('تم النسخ.', 'ok'); }
+  catch(e){ show('حدده يدويًا وانسخه.', 'err'); }
+});
+function toCheck(){ $('tokIn').value = localStorage.getItem('axon_claim_token') || ''; view('viewCheck'); }
+$('btnToCheck').addEventListener('click', toCheck);
+$('btnHave').addEventListener('click', toCheck);
+$('btnBack').addEventListener('click', ()=> view('viewStart'));
+
+$('btnCheck').addEventListener('click', async ()=>{
+  const tok = $('tokIn').value.trim();
+  if(!tok){ show('اكتب رمز الطلب.', 'err'); return; }
+  $('btnClaim').classList.add('hide');
+  try{
+    const d = await call({ action:'status', claim_token: tok });
+    if(!d.success){ show(d.error || 'تعذرت العملية.', 'err'); return; }
+    const names = { pending:'قيد المراجعة', approved:'تمت الموافقة', rejected:'مرفوض', cancelled:'ملغى', used:'استُعمل', expired:'منتهي' };
+    if(d.ready){ show('تمت الموافقة ويمكنك الاستلام الآن.', 'ok'); $('btnClaim').classList.remove('hide'); }
+    else if(d.status === 'approved'){ show(`تمت الموافقة. الاستلام بعد: ${fmt(d.eligible_at)}`, 'ok'); }
+    else if(d.status === 'pending'){ show(`قيد المراجعة. أقرب وقت للاستلام: ${fmt(d.eligible_at)}`, 'ok'); }
+    else { show(`حالة الطلب: ${names[d.status] || d.status}`, 'err'); }
+  }catch(e){ show('تعذر الاتصال بالسيرفر.', 'err'); }
+});
+$('btnClaim').addEventListener('click', async ()=>{
+  const b = $('btnClaim'); b.disabled = true;
+  try{
+    const d = await call({ action:'claim', claim_token: $('tokIn').value.trim() });
+    if(!d.success){ show(d.error || 'تعذرت العملية.', 'err'); return; }
+    localStorage.removeItem('axon_claim_token');
+    $('tempBox').textContent = d.temp_password;
+    $('tempBox').classList.remove('hide');
+    $('toLogin').classList.remove('hide');
+    b.classList.add('hide');
+    show('هذه كلمة السر المؤقتة، انسخها الآن وما تظهرش مرة أخرى. ستُطلب منك كلمة جديدة عند أول دخول.', 'ok');
+  }catch(e){ show('تعذر الاتصال بالسيرفر.', 'err'); }
+  finally{ b.disabled = false; }
+});
+</script>
+</body>
+</html>
