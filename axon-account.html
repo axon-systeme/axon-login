@@ -6,7 +6,7 @@
 <title>AXON — لوحة الحساب</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
-  <script>document.documentElement.dataset.theme = localStorage.getItem('axon_theme') || 'dark';
+  <script>document.documentElement.dataset.theme = localStorage.getItem('axon_theme') || 'dark';</script>
   <script>
 window.addEventListener('error', function(e){
   var el = document.getElementById('pageLoader'); if(el) el.remove();
@@ -301,6 +301,127 @@ window.addEventListener('error', function(e){
     <button class="btn" id="btnChangePw" style="width:100%;margin-top:10px;">تغيير كلمة السر</button>
     <div class="msg" id="msgChangePw"></div>
   </div>
+  <div class="card" id="cardRecovery">
+    <h2>استرجاع الحساب</h2>
+    <div class="sub">مصادقة ثنائية لإثبات هويتك إذا نسيت كلمة السر. تحتاج تطبيق مصادقة مثل Google Authenticator.</div>
+    <div class="sub" id="recStatus">جاري التحميل...</div>
+
+    <div id="recStep0">
+      <button class="btn" id="btnRecStart" style="width:100%;">تفعيل</button>
+    </div>
+
+    <div id="recStep1" style="display:none;">
+      <div class="field">
+        <label>كلمة السر الحالية</label>
+        <input type="password" id="recPw" autocomplete="current-password" style="direction:ltr;">
+      </div>
+      <button class="btn" id="btnRecPw" style="width:100%;margin-top:10px;">متابعة</button>
+    </div>
+
+    <div id="recStep2" style="display:none;">
+      <div class="sub">1) أضف هذا المفتاح في تطبيق المصادقة (أو اضغط الزر أسفله):</div>
+      <div id="recSecret" style="padding:12px;border:1px dashed var(--brass);border-radius:8px;text-align:center;font-family:monospace;letter-spacing:2px;user-select:all;direction:ltr;word-break:break-all;"></div>
+      <a id="recOpen" href="#" style="display:block; text-align:center; text-decoration:none; margin-top:10px; padding:11px; border-radius:8px; background:linear-gradient(180deg,var(--brass-bright),var(--brass)); color:#14171c; font-weight:600; font-size:0.88rem;">فتح في تطبيق المصادقة</a>
+      <div class="sub" style="margin-top:14px;">2) اكتب الكود ذو 6 أرقام الظاهر في التطبيق:</div>
+      <div class="field">
+        <input type="text" id="recCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" style="direction:ltr;">
+      </div>
+      <div class="field">
+        <label>مدة الانتظار عند طلب الاسترجاع</label>
+        <select id="recWait" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--ink-3);background:var(--ink);color:var(--paper);">
+          <option value="6">6 ساعات</option>
+          <option value="12">12 ساعة</option>
+          <option value="24" selected>24 ساعة</option>
+          <option value="48">48 ساعة</option>
+          <option value="72">72 ساعة</option>
+        </select>
+      </div>
+      <button class="btn" id="btnRecConfirm" style="width:100%;margin-top:10px;">تأكيد التفعيل</button>
+    </div>
+
+    <div id="recStep3" style="display:none;">
+      <div class="sub">رموز الاسترجاع: كل رمز يخدم مرة وحدة. احفظها الآن في مكان آمن، ما راح تظهر مرة أخرى.</div>
+      <pre id="recCodes" style="padding:12px;border:1px dashed var(--brass);border-radius:8px;text-align:center;font-family:monospace;letter-spacing:2px;line-height:1.9;user-select:all;direction:ltr;"></pre>
+      <button class="btn" id="btnRecCopy" style="width:100%;margin-top:10px;">نسخ الرموز</button>
+      <button class="btn" id="btnRecDownload" style="width:100%;margin-top:8px;">تحميل كملف نصي</button>
+      <button class="btn" id="btnRecDone" style="width:100%;margin-top:8px;">حفظتها، إنهاء</button>
+    </div>
+
+    <div class="msg" id="msgRec"></div>
+  </div>
+  <script>
+  (function(){
+    const $ = (id)=> document.getElementById(id);
+    let recEnabled = false;
+    function recMsg(t, type){ const el = $('msgRec'); el.textContent = t; el.className = 'msg show ' + type; }
+    function recHide(){ $('msgRec').className = 'msg'; }
+    function recShow(step){
+      ['recStep0','recStep1','recStep2','recStep3'].forEach(s=>{ $(s).style.display = (s === step ? '' : 'none'); });
+    }
+    async function recCall(payload){
+      const res = await fetch(fnUrl('recovery-setup'), {
+        method:'POST', headers: headers(),
+        body: JSON.stringify({ session_token: sessionToken, ...payload })
+      });
+      return res.json();
+    }
+    async function recStatus(){
+      try{
+        const d = await recCall({ action:'status' });
+        if(!d.success){ $('recStatus').textContent = d.error || 'تعذر التحميل.'; return; }
+        recEnabled = !!d.enabled;
+        $('recStatus').textContent = recEnabled
+          ? `مفعّل · رموز متبقية: ${d.codes_left} · مدة الانتظار: ${d.wait_hours} ساعة`
+          : 'غير مفعّل';
+        $('btnRecStart').textContent = recEnabled ? 'إعادة الضبط' : 'تفعيل';
+      }catch(e){ $('recStatus').textContent = 'تعذر الاتصال بالسيرفر.'; }
+    }
+    $('btnRecStart').addEventListener('click', ()=>{
+      if(recEnabled && !confirm('إعادة الضبط تلغي المفتاح والرموز الحالية. تكمل؟')) return;
+      recHide(); recShow('recStep1');
+    });
+    $('btnRecPw').addEventListener('click', async ()=>{
+      const pw = $('recPw').value;
+      if(!pw){ recMsg('اكتب كلمة السر الحالية.', 'err'); return; }
+      const btn = $('btnRecPw'); btn.disabled = true;
+      try{
+        const d = await recCall({ action:'start', current_password: pw });
+        if(!d.success){ recMsg(d.error || 'تعذرت العملية.', 'err'); return; }
+        $('recPw').value = '';
+        $('recSecret').textContent = d.secret;
+        $('recOpen').href = d.otpauth_uri;
+        recHide(); recShow('recStep2');
+      }catch(e){ recMsg('تعذر الاتصال بالسيرفر.', 'err'); }
+      finally{ btn.disabled = false; }
+    });
+    $('btnRecConfirm').addEventListener('click', async ()=>{
+      const btn = $('btnRecConfirm'); btn.disabled = true;
+      try{
+        const d = await recCall({ action:'confirm', code: $('recCode').value.trim(), wait_hours: parseInt($('recWait').value, 10) });
+        if(!d.success){ recMsg(d.error || 'تعذرت العملية.', 'err'); return; }
+        $('recCode').value = '';
+        $('recCodes').textContent = d.recovery_codes.join('\n');
+        recHide(); recShow('recStep3');
+      }catch(e){ recMsg('تعذر الاتصال بالسيرفر.', 'err'); }
+      finally{ btn.disabled = false; }
+    });
+    $('btnRecCopy').addEventListener('click', async ()=>{
+      try{ await navigator.clipboard.writeText($('recCodes').textContent); recMsg('تم النسخ.', 'ok'); }
+      catch(e){ recMsg('تعذر النسخ، حددها يدويًا.', 'err'); }
+    });
+    $('btnRecDownload').addEventListener('click', ()=>{
+      const text = 'AXON — رموز الاسترجاع (كل رمز لمرة وحدة)\n\n' + $('recCodes').textContent + '\n';
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([text], { type:'text/plain' }));
+      a.download = 'axon-recovery-codes.txt';
+      document.body.appendChild(a); a.click(); a.remove();
+    });
+    $('btnRecDone').addEventListener('click', ()=>{
+      $('recCodes').textContent = ''; recHide(); recShow('recStep0'); recStatus();
+    });
+    window.addEventListener('load', recStatus);
+  })();
+  </script>
   <div class="card">
     <h2>الأجهزة والبصمات المسجلة</h2>
     <div class="sub">الأجهزة المصرح لها بالدخول ببصمتك.</div>
