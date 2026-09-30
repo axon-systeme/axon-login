@@ -359,7 +359,7 @@ window.addEventListener('error', function(e){
       ['recStep0','recStep1','recStep2','recStep3'].forEach(s=>{ $(s).style.display = (s === step ? '' : 'none'); });
     }
     async function recCall(payload){
-      const res = await fetch(fnUrl('recovery-setup'), {
+      const res = await fetch(fnUrl('swift-action'), {
         method:'POST', headers: headers(),
         body: JSON.stringify({ session_token: sessionToken, ...payload })
       });
