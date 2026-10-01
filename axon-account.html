@@ -1068,7 +1068,7 @@ async function loadTickets(){
     listEl.innerHTML = tickets.map(t => `
       <div class="ticket-item">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span class="t-subject">${t.subject}</span>
+          <span class="t-subject">${esc(t.subject)}</span>
           <span class="t-status ${t.status === 'open' ? 'open' : 'closed'}">${t.status === 'open' ? 'مفتوحة' : 'مغلقة'}</span>
         </div>
       </div>
