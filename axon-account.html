@@ -529,6 +529,7 @@ if(!sessionToken || !userId){
 document.getElementById('avatarLetter').textContent = '?';
 const REAL_SLUGS_CTX = { "get-user-context": "bright-handler", "protected-accounts-list": "smooth-endpoint", "protected-account-create": "smooth-api", "employees-manage": "super-action", "message-manage": "smart-processor", "archive-accounts-list": "swift-task", "archive-account-create": "hyper-task", "recovery-request": "clever-service" };
 function fnCtx(name){ return `${SUPABASE_URL}/functions/v1/${REAL_SLUGS_CTX[name] || name}`; }
+  const I18N_FN = "i18n-translate";
 function currentLang(){ return localStorage.getItem('axon_lang') || 'ar'; }
 
 function collectTextNodes(root){
