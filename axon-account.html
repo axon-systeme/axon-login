@@ -904,10 +904,10 @@ async function loadDevices(){
       row.className = 'device-item';
       row.innerHTML = `
         <div class="device-info">
-          <div class="name">${(dev.device_label || 'جهاز غير معروف').slice(0,40)}</div>
+          <div class="name">${esc((dev.device_label || 'جهاز غير معروف').slice(0,40))}</div>
           <div class="meta">أضيف: ${formatDate(dev.created_at)} · آخر استخدام: ${formatDate(dev.last_used_at)}</div>
         </div>
-        <button class="del-btn" data-id="${dev.id}">✕</button>
+        <button class="del-btn" data-id="${esc(dev.id)}">✕</button>
       `;
       listEl.appendChild(row);
     });
