@@ -1379,7 +1379,7 @@ async function loadRecoveryAdmin(){
         ${r.status === 'pending' ? `
         <div style="display:flex;gap:8px;margin-top:10px;">
           <button class="btn" data-rec-act="approve" data-id="${esc(r.id)}" style="flex:1;">موافقة</button>
-          <button class="btn" data-rec-act="reject" data-id="${esc(r.id)}" style="flex:1;background:none;color:var(--paper);border:1px solid var(--ink-3);">رفض</button>
+         <button class="btn" data-rec-act="reject" data-id="${esc(r.id)}" style="flex:1;background:none;color:var(--paper);border:1px solid var(--ink-3);">رفض</button> 
         </div>` : ''}
       </div>
     `).join('');
