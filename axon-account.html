@@ -129,7 +129,11 @@ window.addEventListener('error', function(e){
     </div>
 </header>
 
-      
+ <div id="recBanner" style="display:none; background:rgba(176,101,79,.16); border:1px solid var(--err); border-radius:12px; padding:14px; margin-bottom:16px; font-size:0.85rem;">
+  <div style="font-weight:600; margin-bottom:6px;">⚠️ طلب استرجاع على حسابك</div>
+  <div id="recBannerText" style="color:var(--slate); margin-bottom:10px;"></div>
+  <button class="btn" id="btnRecCancel" style="width:100%;">ماشي أنا، إلغاء الطلب</button>
+</div>     
 <div class="tab-section" id="tabHome">
   <div class="card" id="cardAddEmployee" style="display:none;">
     <h2>إضافة عامل جديد</h2>
@@ -1302,6 +1306,36 @@ document.getElementById('btnChangePw').addEventListener('click', async ()=>{
 });
 document.getElementById('langSelect').value = currentLang();
 setTimeout(translatePage, 1200);
+  async function recPendingCall(action){
+  const res = await fetch(fnCtx('recovery-request'), {
+    method:'POST', headers: headers(),
+    body: JSON.stringify({ action, session_token: sessionToken })
+  });
+  return res.json();
+}
+async function checkRecoveryBanner(){
+  try{
+    const d = await recPendingCall('my_pending');
+    const box = document.getElementById('recBanner');
+    if(!d.success || !d.requests || !d.requests.length){ box.style.display = 'none'; return; }
+    const r = d.requests[0];
+    const when = new Date(r.eligible_at).toLocaleString('ar', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+    document.getElementById('recBannerText').textContent =
+      'تم تقديم طلب استرجاع لهذا الحساب. أقرب وقت للاستلام: ' + when + '. إذا ماشي أنت، ألغِه الآن.';
+    box.style.display = 'block';
+  }catch(e){}
+}
+document.getElementById('btnRecCancel').addEventListener('click', async ()=>{
+  if(!confirm('إلغاء طلب الاسترجاع؟')) return;
+  const btn = document.getElementById('btnRecCancel'); btn.disabled = true;
+  try{
+    const d = await recPendingCall('cancel');
+    if(d.success) document.getElementById('recBanner').style.display = 'none';
+  }catch(e){}
+  finally{ btn.disabled = false; }
+});
+checkRecoveryBanner();
+setInterval(checkRecoveryBanner, 60000);
 loadMessages();
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
