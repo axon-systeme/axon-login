@@ -850,8 +850,8 @@ async function loadProtectedAccounts(){
       row.className = 'device-item';
       row.innerHTML = `
         <div class="device-info">
-          <div class="name">${acc.full_name}</div>
-          <div class="meta">${acc.email || acc.phone || 'لا توجد بيانات تواصل'}</div>
+          <div class="name">${esc(acc.full_name)}</div>
+          <div class="meta">${esc(acc.email || acc.phone || 'لا توجد بيانات تواصل')}</div>
         </div>
       `;
       listEl.appendChild(row);
