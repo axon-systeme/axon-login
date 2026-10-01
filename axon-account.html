@@ -968,10 +968,10 @@ async function loadEmployees(){
       row.className = 'employee-item';
       row.innerHTML = `
         <div>
-          <div class="e-name">${emp.full_name}</div>
-          <div class="e-meta">${emp.job_title || 'بدون منصب'} · ${emp.monthly_salary ? emp.monthly_salary + ' شهريًا' : 'بدون راتب مسجل'}</div>
+         <div class="e-name">${esc(emp.full_name)}</div>
+<div class="e-meta">${esc(emp.job_title || 'بدون منصب')} · ${emp.monthly_salary ? esc(emp.monthly_salary) + ' شهريًا' : 'بدون راتب مسجل'}</div> 
         </div>
-        <button class="del-btn" data-id="${emp.id}">✕</button>
+        <button class="del-btn" data-id="${esc(emp.id)}">✕</button>
       `;
       listEl.appendChild(row);
     });
