@@ -1079,6 +1079,7 @@ async function loadTickets(){
 
 document.getElementById('btnLogoutProfile').addEventListener('click', ()=>{
   sessionStorage.removeItem('axon_user_id');
+sessionStorage.removeItem('axon_session_token');
   window.location.href = "axon-portal.html";
 });
 
