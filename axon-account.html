@@ -1167,7 +1167,7 @@ async function loadMessages(){
       row.style.cursor = 'pointer';
       row.innerHTML = `
         <div class="device-info">
-          <div class="name">${msg.is_read ? '' : '🔵 '}${msg.subject}</div>
+         <div class="name">${msg.is_read ? '' : '🔵 '}${esc(msg.subject)}</div> 
           <div class="meta">${msg.sender_type === 'organization' ? 'من المؤسسة' : 'من AXON'} · ${formatMsgDate(msg.created_at)}</div>
         </div>
       `;
