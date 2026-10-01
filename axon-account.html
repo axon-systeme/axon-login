@@ -631,6 +631,12 @@ async function loadUserContext(){
       });
       if(data.user.role === 'admin'){
         document.getElementById('cardAdminReset').style.display = '';
+       recAdminCall({ action:'list' }).then(d=>{
+  if(d.success){
+    document.getElementById('cardRecoveryAdmin').style.display = '';
+    loadRecoveryAdmin();
+  }
+}).catch(()=>{}); 
       }
     }
   }catch(e){ document.body.insertAdjacentHTML('afterbegin', `<div style="background:darkred;color:white;padding:10px;font-size:13px;">CATCH ERROR: ${e.message}</div>`); }
