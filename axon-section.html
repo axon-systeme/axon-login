@@ -116,7 +116,7 @@
   .pick .btn{ margin-top:0; }
   .msg{ margin-top:10px; font-size:0.8rem; padding:9px 11px; border-radius:8px; display:none; }
   .msg.show{ display:block; }
-  .msg.err{ background:rgba(176,101,79,.14); color:#e3a794; }
+  .msg.err{ background:rgba(176,141,87,.14); color:var(--paper); border-inline-start:3px solid var(--brass); }
 
   .toast{
     position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:300;
@@ -124,7 +124,7 @@
     padding:11px 18px; border-radius:10px; font-size:0.85rem; display:none; max-width:90%; text-align:center;
   }
   .toast.show{ display:block; }
-  .toast.err{ border-color:var(--err); }
+  .toast.err{ border-color:var(--brass-bright); }
 
   @media (prefers-reduced-motion: no-preference){
     .sheet.open .sheet-body{ animation:rise .18s ease-out; }
