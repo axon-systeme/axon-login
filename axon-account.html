@@ -626,13 +626,13 @@ async function loadUserContext(){
       document.getElementById('profileOrg').textContent = currentOrgName || 'بدون مؤسسة';
       document.getElementById('profilePhone').textContent = data.user.phone || 'غير مسجّل';
       document.getElementById('profileEmail').textContent = data.user.email || '—';
-      document.querySelectorAll('a[href="axon-invites.html"], a[href="axon-admin.html"]').forEach(el => { el.style.display = 'none'; }); 
-      document.querySelectorAll('a[href="axon-invites.html"]').forEach(el => { el.style.display = 'none'; });
+            document.getElementById('avatarLetter').textContent = (displayName || '?').charAt(0).toUpperCase();
+      document.querySelectorAll('a[href="axon-invites.html"], a[href="axon-admin.html"]').forEach(el => { el.style.display = 'none'; });
       fetch(`${SUPABASE_URL}/functions/v1/smart-processor`, {
         method:'POST', headers: headers(),
         body: JSON.stringify({ action:'list', session_token: sessionToken })
-             if(d.success) document.querySelectorAll('a[href="axon-invites.html"], a[href="axon-admin.html"]').forEach(el => { el.style.display = 'block'; }); 
-        if(d.success) document.querySelectorAll('a[href="axon-invites.html"]').forEach(el => { el.style.display = 'block'; });
+      }).then(r=>r.json()).then(d=>{
+        if(d.success) document.querySelectorAll('a[href="axon-invites.html"], a[href="axon-admin.html"]').forEach(el => { el.style.display = 'block'; });
       }).catch(()=>{});
       if(data.user.role === 'admin'){
         document.getElementById('cardAdminReset').style.display = '';
