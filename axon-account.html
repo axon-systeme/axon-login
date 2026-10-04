@@ -260,7 +260,7 @@ window.addEventListener('error', function(e){
 <div class="tab-section" id="tabSettings">
   <div class="card">
     <div class="set-item" id="btnTheme"><span>المظهر</span><span id="themeLabel">ليلي 🌙</span></div>
-   <a class="set-item" href="axon-portal.html?support=1" style="text-decoration:none;color:inherit;"><span>الدعم الفني</span><span>›</span></a> 
+       <div class="set-item" data-open="tabSupport"><span>الدعم الفني</span><span>›</span></div>
     <div class="set-item" data-open="tabPrivacy"><span>سياسة الخصوصية</span><span>›</span></div>
     <div class="set-item" data-open="tabTerms"><span>القوانين والسياسات</span><span>›</span></div>
   </div>
@@ -534,7 +534,7 @@ if(!sessionToken || !userId){
 }
 
 document.getElementById('avatarLetter').textContent = '?';
-const REAL_SLUGS_CTX = { "get-user-context": "bright-handler", "protected-accounts-list": "smooth-endpoint", "protected-account-create": "smooth-api", "employees-manage": "super-action", "message-manage": "smart-processor", "archive-accounts-list": "swift-task", "archive-account-create": "hyper-task", "recovery-request": "clever-service" , "recovery-admin": "smooth-handler" };
+const REAL_SLUGS_CTX = { "get-user-context": "bright-handler", "protected-accounts-list": "smooth-endpoint", "protected-account-create": "smooth-api", "employees-manage": "super-action", "message-manage": "smart-processor", "archive-accounts-list": "swift-task", "archive-account-create": "hyper-task", "recovery-request": "clever-service" , "recovery-admin": "smooth-handler", "support-manage": "swift-responder" };
 function fnCtx(name){ return `${SUPABASE_URL}/functions/v1/${REAL_SLUGS_CTX[name] || name}`; }
   const I18N_FN = "i18n-translate";
 function currentLang(){ return localStorage.getItem('axon_lang') || 'ar'; }
@@ -1050,45 +1050,68 @@ full_name, job_title, hire_date: hire_date || null,
 
 // ===== الدعم الفني =====
 function showTicketMsg(text, type){
-  const el = document.getElementById('msgTicket');
-  el.textContent = text;
-  el.className = 'msg show ' + type;
+  async function supportCall(payload){
+  const res = await fetch(fnCtx('support-manage'), {
+    method:'POST', headers: headers(),
+    body: JSON.stringify({ session_token: sessionToken, ...payload })
+  });
+  return res.json();
 }
 
-document.getElementById('btnSendTicket').addEventListener('click', ()=>{
+document.getElementById('btnSendTicket').addEventListener('click', async ()=>{
   const subject = document.getElementById('ticketSubject').value.trim();
   const message = document.getElementById('ticketMessage').value.trim();
   if(!subject || !message){
-    showTicketMsg('عمر الموضوع والرسالة.', 'err');
+    showTicketMsg('عمّر الموضوع والرسالة.', 'err');
     return;
   }
-  const mailSubject = encodeURIComponent('AXON دعم: ' + subject);
-  const mailBody = encodeURIComponent(message);
-  window.location.href = `mailto:tarekguelma013@gmail.com?subject=${mailSubject}&body=${mailBody}`;
-  showTicketMsg('تم فتح تطبيق البريد لإرسال التذكرة.', 'ok');
-  document.getElementById('ticketSubject').value = '';
-  document.getElementById('ticketMessage').value = '';
+  const btn = document.getElementById('btnSendTicket');
+  btn.disabled = true;
+  try{
+    const d = await supportCall({ action:'create', subject, message });
+    if(d.success){
+      document.getElementById('ticketSubject').value = '';
+      document.getElementById('ticketMessage').value = '';
+      showTicketMsg('وصلت تذكرتك. رمزها: ' + d.ticket_code, 'ok');
+      loadTickets();
+    }else{
+      showTicketMsg(d.error || 'تعذر الإرسال.', 'err');
+    }
+  }catch(e){
+    showTicketMsg('تعذر الاتصال بالسيرفر.', 'err');
+  }finally{
+    btn.disabled = false;
+  }
 });
 
 async function loadTickets(){
   const listEl = document.getElementById('ticketsList');
   try{
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/support_tickets?user_id=eq.${userId}&order=created_at.desc`,
-      { headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` } }
-    );
-    const tickets = await res.json();
-    if(!tickets.length){
+    const d = await supportCall({ action:'my_list' });
+    if(!d.success){
+      listEl.innerHTML = '<div class="empty">' + esc(d.error || 'تعذر تحميل التذاكر.') + '</div>';
+      return;
+    }
+    if(!d.tickets.length){
       listEl.innerHTML = '<div class="empty">ماعندكش تذاكر سابقة.</div>';
       return;
     }
-    listEl.innerHTML = tickets.map(t => `
-      <div class="ticket-item">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span class="t-subject">${esc(t.subject)}</span>
-          <span class="t-status ${t.status === 'open' ? 'open' : 'closed'}">${t.status === 'open' ? 'مفتوحة' : 'مغلقة'}</span>
+    const st = { open:'مفتوحة', answered:'تم الرد', closed:'مغلقة' };
+    listEl.innerHTML = d.tickets.map(t => `
+      <div style="padding:12px 0;border-bottom:1px solid var(--ink-3);">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <span style="font-weight:600;font-size:0.88rem;">${esc(t.subject)}</span>
+          <span style="font-size:0.72rem;color:var(--brass-bright);">${st[t.status] || esc(t.status)}</span>
         </div>
+        <div style="font-size:0.72rem;color:var(--slate);margin-top:4px;direction:ltr;text-align:right;">${esc(t.ticket_code)} · ${esc(formatMsgDate(t.created_at))}</div>
+        <div style="font-size:0.82rem;margin-top:8px;white-space:pre-wrap;">${esc(t.message)}</div>
+        ${t.reply ? `<div style="margin-top:8px;padding:10px;border-radius:8px;background:var(--ink);border-inline-start:3px solid var(--brass);font-size:0.82rem;white-space:pre-wrap;"><div style="font-size:0.72rem;color:var(--slate);margin-bottom:4px;">رد الدعم</div>${esc(t.reply)}</div>` : ''}
       </div>
+    `).join('');
+  }catch(e){
+    listEl.innerHTML = '<div class="empty">تعذر تحميل التذاكر.</div>';
+  }
+}
     `).join('');
   }catch(e){
     listEl.innerHTML = '<div class="empty">تعذر تحميل التذاكر.</div>';
