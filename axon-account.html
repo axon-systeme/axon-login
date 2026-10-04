@@ -74,6 +74,7 @@ window.addEventListener('error', function(e){
 
   .msg{ margin-top:10px; font-size:0.78rem; padding:8px 10px; border-radius:7px; display:none; }
   .msg.show{ display:block; }
+  .msg.ok{ background:rgba(92,145,121,.14); color:#9fd2b8; }
   .msg.err{ background:rgba(176,141,87,.14); color:var(--paper); border-inline-start:3px solid var(--brass); }
 .bottom-bar{
   position:fixed; bottom:0; left:0; right:0; z-index:150;
@@ -625,9 +626,13 @@ async function loadUserContext(){
       document.getElementById('profilePhone').textContent = data.user.phone || 'غير مسجّل';
       document.getElementById('profileEmail').textContent = data.user.email || '—';
       document.getElementById('avatarLetter').textContent = (displayName || '?').charAt(0).toUpperCase();
-      document.querySelectorAll('a[href="axon-invites.html"]').forEach(el => {
-        el.style.display = (data.user.role === 'admin') ? 'block' : 'none';
-      });
+      document.querySelectorAll('a[href="axon-invites.html"]').forEach(el => { el.style.display = 'none'; });
+      fetch(`${SUPABASE_URL}/functions/v1/smart-processor`, {
+        method:'POST', headers: headers(),
+        body: JSON.stringify({ action:'list', session_token: sessionToken })
+      }).then(r=>r.json()).then(d=>{
+        if(d.success) document.querySelectorAll('a[href="axon-invites.html"]').forEach(el => { el.style.display = 'block'; });
+      }).catch(()=>{});
       if(data.user.role === 'admin'){
         document.getElementById('cardAdminReset').style.display = '';
        recAdminCall({ action:'list' }).then(d=>{
