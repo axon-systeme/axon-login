@@ -1112,11 +1112,6 @@ async function loadTickets(){
     listEl.innerHTML = '<div class="empty">تعذر تحميل التذاكر.</div>';
   }
 }
-    `).join('');
-  }catch(e){
-    listEl.innerHTML = '<div class="empty">تعذر تحميل التذاكر.</div>';
-  }
-}
 
 document.getElementById('btnLogoutProfile').addEventListener('click', ()=>{
   sessionStorage.removeItem('axon_user_id');
