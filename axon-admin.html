@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AXON — صندوق الدعم</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>document.documentElement.dataset.theme = localStorage.getItem('axon_theme') || 'dark';</script>
+<style>
+  :root{
+    --ink:#14171c; --ink-2:#1b1f26; --ink-3:#232833;
+    --brass:#b08d57; --brass-bright:#d4ac6e;
+    --paper:#ece7dc; --slate:#7d8493;
+    --ok:#5c9179; --radius:14px;
+  }
+  :root[data-theme="light"]{ --ink:#f4f1ea; --ink-2:#ffffff; --ink-3:#e2ddd2; --paper:#1d2129; --slate:#6b7280; }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background: radial-gradient(1200px 800px at 50% -10%, #1e2430 0%, var(--ink) 55%), var(--ink);
+    color:var(--paper); font-family:'IBM Plex Sans Arabic', sans-serif;
+    min-height:100vh; padding:20px 16px 70px; -webkit-font-smoothing:antialiased;
+  }
+  :root[data-theme="light"] body{ background:var(--ink); }
+  .wrap{ max-width:560px; margin:0 auto; }
+  header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+  .home-link{
+    font-size:0.78rem; color:var(--slate); border:1px solid var(--ink-3);
+    padding:7px 12px; border-radius:8px; text-decoration:none;
+  }
+  .home-link:hover{ border-color:var(--brass); color:var(--paper); }
+  h1{ font-family:'Zilla Slab', serif; font-size:1.25rem; margin-bottom:4px; }
+  .lead{ font-size:0.8rem; color:var(--slate); margin-bottom:16px; }
+  button, textarea{ font-family:inherit; }
+  button:focus-visible, textarea:focus-visible, a:focus-visible{ outline:2px solid var(--brass-bright); outline-offset:2px; }
+
+  .filters{ display:flex; gap:6px; margin-bottom:14px; overflow-x:auto; padding-bottom:2px; }
+  .chip{
+    flex:0 0 auto; background:var(--ink-2); border:1px solid var(--ink-3); color:var(--slate);
+    border-radius:20px; padding:7px 14px; font-size:0.78rem; cursor:pointer;
+  }
+  .chip.active{ border-color:var(--brass); color:var(--paper); font-weight:600; }
+  .chip b{ color:var(--brass-bright); margin-inline-start:6px; font-weight:600; }
+
+  .tk{
+    background:var(--ink-2); border:1px solid var(--ink-3); border-radius:var(--radius);
+    padding:16px; margin-bottom:12px; border-inline-start:3px solid var(--ink-3);
+  }
+  .tk.open{ border-inline-start-color:var(--brass-bright); }
+  .tk.answered{ border-inline-start-color:var(--ok); }
+  .tk-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .tk-subject{ font-weight:600; font-size:0.95rem; }
+  .tk-status{ flex:0 0 auto; font-size:0.72rem; color:var(--brass-bright); }
+  .tk.answered .tk-status{ color:#9fd2b8; }
+  .tk.closed .tk-status{ color:var(--slate); }
+  .tk-meta{ font-size:0.74rem; color:var(--slate); margin-top:6px; line-height:1.8; }
+  .tk-meta .ltr{ direction:ltr; display:inline-block; }
+  .tk-text{ font-size:0.85rem; margin-top:10px; white-space:pre-wrap; line-height:1.7; }
+  .tk-reply{
+    margin-top:10px; padding:10px 12px; border-radius:8px; background:var(--ink);
+    border-inline-start:3px solid var(--brass); font-size:0.82rem; white-space:pre-wrap; line-height:1.7;
+  }
+  .tk-reply small{ display:block; color:var(--slate); font-size:0.72rem; margin-bottom:4px; }
+  textarea{
+    width:100%; min-height:80px; resize:vertical; margin-top:12px;
+    background:var(--ink); border:1px solid var(--ink-3); border-radius:8px;
+    padding:10px; color:var(--paper); font-size:0.85rem;
+  }
+  .row{ display:flex; gap:8px; margin-top:8px; }
+  .btn{
+    flex:1; padding:11px; border-radius:9px; border:none; font-weight:600; font-size:0.85rem; cursor:pointer;
+    background:linear-gradient(180deg, var(--brass-bright), var(--brass)); color:#14171c;
+  }
+  .btn.ghost{ background:none; border:1px solid var(--ink-3); color:var(--slate); }
+  .btn:disabled{ opacity:0.55; }
+  .empty{ text-align:center; color:var(--slate); font-size:0.85rem; padding:30px 0; }
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:300;
+    background:var(--ink-3); border:1px solid var(--brass); color:var(--paper);
+    padding:11px 18px; border-radius:10px; font-size:0.85rem; display:none; max-width:90%; text-align:center;
+  }
+  .toast.show{ display:block; }
+  .toast.err{ border-color:var(--slate); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="axon-logo.png" alt="AXON" style="height:38px; width:auto;">
+    <a class="home-link" href="axon-account.html">لوحة الحساب</a>
+  </header>
+
+  <h1>صندوق الدعم الفني</h1>
+  <div class="lead">تذاكر المستخدمين. كل رد يُحفظ بوقته ويصل لصاحب التذكرة في بريده داخل النظام.</div>
+
+  <div class="filters" id="filters"></div>
+  <div id="list"><div class="empty">جاري التحميل...</div></div>
+  <button class="btn ghost" id="btnRefresh" style="width:100%; margin-top:6px;">تحديث</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = "https://tmizzjieyeqbcxuxoucw.supabase.co";
+const ANON_KEY = "sb_publishable_0MXFCqGL0eqkteVozjLtDQ_VCmGeXhM";
+const SUPPORT_FN = "swift-responder";
+
+const sessionToken = sessionStorage.getItem('axon_session_token');
+const userId = sessionStorage.getItem('axon_user_id');
+if(!sessionToken || !userId){ window.location.href = 'axon-portal.html'; }
+
+const $ = id => document.getElementById(id);
+function headers(){
+  return { "Content-Type":"application/json", "Authorization":`Bearer ${ANON_KEY}`, "apikey":ANON_KEY };
+}
+function esc(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function fmt(iso){
+  if(!iso) return '';
+  return new Date(iso).toLocaleString('ar', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+async function call(payload){
+  const r = await fetch(`${SUPABASE_URL}/functions/v1/${SUPPORT_FN}`, {
+    method:'POST', headers: headers(),
+    body: JSON.stringify({ session_token: sessionToken, ...payload })
+  });
+  return r.json();
+}
+
+let toastTimer = null;
+function toast(text, isErr){
+  const el = $('toast');
+  el.textContent = text;
+  el.className = 'toast show' + (isErr ? ' err' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ el.className = 'toast'; }, 3500);
+}
+
+const STATUS = { open:'مفتوحة', answered:'تم الرد', closed:'مغلقة' };
+const FILTERS = [['all','الكل'], ['open','مفتوحة'], ['answered','تم الرد'], ['closed','مغلقة']];
+let tickets = [];
+let filter = 'open';
+
+function renderFilters(){
+  $('filters').innerHTML = FILTERS.map(([key, label]) => {
+    const n = key === 'all' ? tickets.length : tickets.filter(t => t.status === key).length;
+    return `<button class="chip${filter === key ? ' active' : ''}" data-filter="${key}">${label}<b>${n}</b></button>`;
+  }).join('');
+}
+
+function ticketCard(t){
+  const who = [t.contact_name, t.organization_name].filter(Boolean).map(esc).join(' — ');
+  return `<div class="tk ${esc(t.status)}">
+    <div class="tk-head">
+      <div class="tk-subject">${esc(t.subject)}</div>
+      <div class="tk-status">${esc(STATUS[t.status] || t.status)}</div>
+    </div>
+    <div class="tk-meta">
+      <span class="ltr">${esc(t.ticket_code)}</span> · ${esc(fmt(t.created_at))}<br>
+      ${who ? who + '<br>' : ''}
+      ${t.contact_email ? `<span class="ltr">${esc(t.contact_email)}</span>` : ''}
+      ${t.user_id ? '' : '<br>من البوابة (بدون حساب): يتابع الرد برمز التذكرة'}
+    </div>
+    <div class="tk-text">${esc(t.message)}</div>
+    ${t.reply ? `<div class="tk-reply"><small>الرد الأخير: ${esc(fmt(t.replied_at))}</small>${esc(t.reply)}</div>` : ''}
+    ${t.status === 'closed' ? '' : `
+      <textarea id="r_${esc(t.id)}" placeholder="اكتب ردك هنا" maxlength="2000"></textarea>
+      <div class="row">
+        <button class="btn" data-act="reply" data-id="${esc(t.id)}">إرسال الرد</button>
+        <button class="btn ghost" data-act="close" data-id="${esc(t.id)}">إغلاق التذكرة</button>
+      </div>`}
+  </div>`;
+}
+
+function render(){
+  renderFilters();
+  const list = filter === 'all' ? tickets : tickets.filter(t => t.status === filter);
+  $('list').innerHTML = list.length ? list.map(ticketCard).join('') : '<div class="empty">لا توجد تذاكر في هذا القسم.</div>';
+}
+
+async function load(){
+  try{
+    const d = await call({ action:'admin_list' });
+    if(!d.success){
+      $('filters').innerHTML = '';
+      $('list').innerHTML = `<div class="empty">${esc(d.error || 'تعذر التحميل.')}</div>`;
+      return;
+    }
+    tickets = d.tickets || [];
+    render();
+  }catch(e){
+    $('list').innerHTML = '<div class="empty">تعذر الاتصال بالسيرفر.</div>';
+  }
+}
+
+async function doReply(id, btn){
+  const text = $('r_' + id).value.trim();
+  if(!text){ toast('اكتب الرد أولًا.', true); return; }
+  btn.disabled = true;
+  try{
+    const d = await call({ action:'admin_reply', ticket_id:id, reply:text });
+    if(!d.success){ toast(d.error || 'تعذر إرسال الرد.', true); return; }
+    const t = tickets.find(x => x.id === id);
+    if(t && t.user_id) toast(d.notified ? 'أُرسل الرد ووصل لصاحبه في البريد.' : 'حُفظ الرد، لكن تعذر إيصاله للبريد.', !d.notified);
+    else toast('حُفظ الرد. صاحب التذكرة يتابعه برمزها.');
+    await load();
+  }catch(e){
+    toast('تعذر الاتصال بالسيرفر.', true);
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+async function doClose(id, btn){
+  if(!confirm('إغلاق هذه التذكرة؟ لا يمكن الرد عليها بعد الإغلاق.')) return;
+  btn.disabled = true;
+  try{
+    const d = await call({ action:'admin_close', ticket_id:id });
+    if(!d.success){ toast(d.error || 'تعذر الإغلاق.', true); return; }
+    toast('أُغلقت التذكرة.');
+    await load();
+  }catch(e){
+    toast('تعذر الاتصال بالسيرفر.', true);
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+document.addEventListener('click', e => {
+  const f = e.target.closest('[data-filter]');
+  if(f){ filter = f.dataset.filter; render(); return; }
+  const b = e.target.closest('[data-act]');
+  if(!b) return;
+  if(b.dataset.act === 'reply') doReply(b.dataset.id, b);
+  else if(b.dataset.act === 'close') doClose(b.dataset.id, b);
+});
+$('btnRefresh').addEventListener('click', load);
+
+load();
+</script>
+</body>
+</html>
