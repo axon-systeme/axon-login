@@ -1050,6 +1050,10 @@ full_name, job_title, hire_date: hire_date || null,
 
 // ===== الدعم الفني =====
 function showTicketMsg(text, type){
+  const el = document.getElementById('msgTicket');
+  el.textContent = text;
+  el.className = 'msg show ' + type;
+}
   async function supportCall(payload){
   const res = await fetch(fnCtx('support-manage'), {
     method:'POST', headers: headers(),
