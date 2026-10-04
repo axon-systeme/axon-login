@@ -283,8 +283,14 @@ async function refreshData(){
 }
 
 async function loadDocs(){
-  const acc = await restRead(`accounts?organization_id=eq.${encodeURIComponent(ctx.orgId)}&name=eq.${encodeURIComponent(ARCHIVE_ACCOUNT_NAME)}&select=id`);
-  archiveAccountId = acc[0] ? acc[0].id : null;
+  try{
+    const ar = await fetch(`${SUPABASE_URL}/functions/v1/swift-task`, {
+      method:'POST', headers: headers(),
+      body: JSON.stringify({ session_token: sessionToken })
+    }).then(r=>r.json());
+    const hit = (ar.accounts || []).find(a => a.name === ARCHIVE_ACCOUNT_NAME);
+    archiveAccountId = hit ? hit.id : null;
+  }catch(e){ archiveAccountId = null; }
   if(!archiveAccountId){ docs = []; return; }
   try{
     const r = await fetch(fn('get-archive-data'), {
