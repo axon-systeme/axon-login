@@ -86,7 +86,8 @@ window.addEventListener('error', function(e){
   display:flex; flex-direction:column; align-items:center; gap:3px;
   font-family:inherit; font-size:0.68rem; padding:4px 12px;
 }
-.tab-btn .icon{ font-size:1.3rem; }
+.tab-btn .icon{ font-size:1.3rem; position:relative; display:inline-block; }
+.badge{ position:absolute; top:-6px; right:-10px; min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:var(--brass-bright); color:#14171c; font-size:0.64rem; font-weight:700; line-height:18px; text-align:center; }
 .tab-btn.active{ color:var(--brass-bright); }
 .tab-section{ display:none; }
 .tab-section.active{ display:block; }
@@ -125,7 +126,7 @@ window.addEventListener('error', function(e){
         <option value="fr">🇫🇷 FR</option>
         <option value="en">🇬🇧 EN</option>
       </select>
-      <button class="notif-btn" onclick="document.querySelector('[data-tab=\'tabNotifications\']')?.click() || (function(){document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));document.getElementById('tabNotifications').classList.add('active');})()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;">🔔</button>
+            <button class="notif-btn" id="btnBell" style="background:none;border:none;font-size:1.3rem;cursor:pointer;position:relative;">🔔<span class="badge" id="badgeBell" style="display:none;"></span></button>
     </div>
 </header>
 
@@ -229,7 +230,9 @@ window.addEventListener('error', function(e){
 <div class="tab-section" id="tabNotifications">
   <div class="card">
     <h2>الإشعارات</h2>
-    <div class="empty">لا توجد إشعارات بعد</div>
+    <div class="sub">الرسائل الجديدة التي لم تقرأها بعد.</div>
+    <div id="notifList"><div class="empty">لا توجد إشعارات جديدة</div></div>
+    <button class="btn" id="btnNotifOpenMail" style="width:100%; margin-top:10px;">فتح البريد</button>
   </div>
 </div>
 
@@ -486,7 +489,7 @@ window.addEventListener('error', function(e){
 
       <div class="bottom-bar">
   <button class="tab-btn" data-tab="tabHome"><span class="icon">🏠</span><span>الرئيسية</span></button>
-  <button class="tab-btn" data-tab="tabMessages"><span class="icon">✉️</span><span>البريد</span></button>
+    <button class="tab-btn" data-tab="tabMessages"><span class="icon">✉️<span class="badge" id="badgeMail" style="display:none;"></span></span><span>البريد</span></button>
   <button class="tab-btn" data-tab="tabArchiving"><span class="icon">📁</span><span>الأرشفة</span></button>
   <button class="tab-btn active" data-tab="tabProfile"><span class="icon">👤</span><span>الملف الشخصي</span></button>
   <button class="tab-btn" data-tab="tabSettings"><span class="icon">⚙️</span><span>الإعدادات</span></button>
@@ -1185,29 +1188,53 @@ function formatMsgDate(iso){
   return d.toLocaleString('ar', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
 }
 
+function setBadge(id, n){
+  const el = document.getElementById(id);
+  if(!el) return;
+  if(n > 0){ el.textContent = n > 99 ? '99+' : String(n).padStart(2, '0'); el.style.display = ''; }
+  else{ el.style.display = 'none'; }
+}
+
+function openMail(){
+  document.querySelector('.tab-btn[data-tab="tabMessages"]').click();
+}
+
+function applyUnread(messages){
+  const unread = (messages || []).filter(m => !m.is_read);
+  setBadge('badgeMail', unread.length);
+  setBadge('badgeBell', unread.length);
+  const nl = document.getElementById('notifList');
+  if(nl){
+    nl.innerHTML = unread.length
+      ? unread.map(m => `<div class="device-item" style="cursor:pointer;"><div class="device-info"><div class="name">🔵 ${esc(m.subject)}</div><div class="meta">${m.sender_type === 'organization' ? 'من المؤسسة' : 'من AXON'} · ${formatMsgDate(m.created_at)}</div></div></div>`).join('')
+      : '<div class="empty">لا توجد إشعارات جديدة</div>';
+  }
+}
+
 async function loadMessages(){
   const listEl = document.getElementById('messagesList');
-  listEl.innerHTML = '<div class="loading">جاري التحميل...</div>';
   try{
     const res = await fetch(fnCtx(MESSAGES_FN), {
       method:'POST', headers: headers(),
       body: JSON.stringify({ action:'list_messages', session_token: sessionToken })
     });
     const data = await res.json();
+    const msgs = (data.success && data.messages) ? data.messages : [];
+    applyUnread(msgs);
 
-    if(!data.success || !data.messages || data.messages.length === 0){
+    if(msgs.length === 0){
       listEl.innerHTML = '<div class="empty">لا توجد رسائل حاليًا.</div>';
       return;
     }
 
     listEl.innerHTML = '';
-    data.messages.forEach(msg=>{
+    msgs.forEach(msg=>{
       const row = document.createElement('div');
       row.className = 'device-item';
       row.style.cursor = 'pointer';
       row.innerHTML = `
         <div class="device-info">
-         <div class="name">${msg.is_read ? '' : '🔵 '}${esc(msg.subject)}</div> 
+         <div class="name">${msg.is_read ? '' : '🔵 '}${esc(msg.subject)}</div>
           <div class="meta">${msg.sender_type === 'organization' ? 'من المؤسسة' : 'من AXON'} · ${formatMsgDate(msg.created_at)}</div>
         </div>
       `;
@@ -1216,17 +1243,25 @@ async function loadMessages(){
         if(!msg.is_read){
           fetch(fnCtx(MESSAGES_FN), {
             method:'POST', headers: headers(),
-           body: JSON.stringify({ action: 'mark_read', session_token: sessionToken, message_id: msg.id }) 
+            body: JSON.stringify({ action: 'mark_read', session_token: sessionToken, message_id: msg.id })
           }).then(()=> loadMessages());
         }
       });
       listEl.appendChild(row);
     });
-
   }catch(e){
     listEl.innerHTML = '<div class="empty">تعذر تحميل الرسائل.</div>';
   }
 }
+
+document.getElementById('btnBell').addEventListener('click', ()=>{
+  document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tabNotifications').classList.add('active');
+});
+document.getElementById('btnNotifOpenMail').addEventListener('click', openMail);
+document.getElementById('notifList').addEventListener('click', openMail);
+setInterval(loadMessages, 60000);
   const ADMIN_RESET_FN = "rapid-endpoint";
 
 async function adminResetCall(payload){
