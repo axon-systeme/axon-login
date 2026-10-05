@@ -238,7 +238,8 @@ const REAL_SLUGS = {
   "save-invoice-archive": "hyper-worker",
   "get-archive-data": "dynamic-task",
   "save-photo-archive": "smart-service",
-  "get-dashboard-data": "clever-handler"
+    "get-dashboard-data": "clever-handler",
+  "storage-manage": "SLUG_STORAGE"
 };
 function fn(name){
   const slug = REAL_SLUGS[name] || name;
@@ -384,10 +385,16 @@ document.getElementById('confirmBtn').addEventListener('click', async function()
     await doBiometricCheck();
 
     btn.textContent = 'جاري رفع الصورة...';
-    const fileName = `${accountId}/${Date.now()}_${selectedFile.name}`;
-    const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/invoice-photos/${fileName}`, {
-      method:'POST',
-      headers: { "Authorization": `Bearer ${ANON_KEY}`, "apikey": ANON_KEY, "Content-Type": selectedFile.type },
+        const upRes = await fetch(fn('storage-manage'), {
+      method:'POST', headers: headers(),
+      body: JSON.stringify({ session_token: sessionToken, action:'upload_url', account_id: accountId, file_name: selectedFile.name, content_type: selectedFile.type || 'application/octet-stream' })
+    });
+    const upJson = await upRes.json();
+    if(!upJson.success) throw new Error(upJson.error || 'تعذر تجهيز الرفع.');
+    const fileName = upJson.path;
+    const uploadRes = await fetch(upJson.upload_url, {
+      method:'PUT',
+      headers: { "Authorization": `Bearer ${ANON_KEY}`, "apikey": ANON_KEY, "Content-Type": selectedFile.type || 'application/octet-stream' },
       body: selectedFile
     });
     if(!uploadRes.ok){
@@ -610,9 +617,10 @@ if(combined.length === 0){
         html += `<div id="archAct${idx}">جاري تحميل الرابط...</div>`;
         html += `</div>`;
 
-        const signPromise = fetch(`${SUPABASE_URL}/storage/v1/object/sign/invoice-photos/${item.image_path}`, {
-          method:'POST', headers: headers(), body: JSON.stringify({ expiresIn: 3600 })
-        }).then(r=>r.json()).then(signData=>({ idx, url: signData.signedURL }));
+                const signPromise = fetch(fn('storage-manage'), {
+          method:'POST', headers: headers(),
+          body: JSON.stringify({ session_token: sessionToken, action:'sign', path: item.image_path })
+        }).then(r=>r.json()).then(s=>({ idx, url: (s.urls && s.urls[item.image_path]) || null }));
         signPromises.push(signPromise);
         } else {
           var itemsRowsHtml = '';
@@ -640,7 +648,7 @@ if(combined.length === 0){
         const el = document.getElementById('archAct' + r.idx);
         if(el){
           if(r.url){
-            const fullUrl = SUPABASE_URL + "/storage/v1" + r.url;
+                        const fullUrl = r.url;
             el.innerHTML = `<a href="${fullUrl}" target="_blank">عرض</a><span class="act" onclick='downloadPhoto("${fullUrl}")'>تحميل</span><span class="act" onclick='printPhoto("${fullUrl}")'>طباعة</span>`;
           } else {
             el.textContent = 'تعذر تحميل الرابط.';
