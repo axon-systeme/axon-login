@@ -653,21 +653,15 @@ async function viewDoc(path){
   if(w) w.location.href = url; else window.location.href = url;
 }
 
-async function downloadDoc(path, name){
+  async function downloadDoc(path, name){
   const url = await signedUrl(path);
   if(!url){ toast('تعذر تجهيز التنزيل.', true); return; }
-  try{
-    const r = await fetch(url);
-    const blob = await r.blob();
-    const ext = (path.split('.').pop() || 'jpg').toLowerCase();
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `${String(name || 'وثيقة').replace(/[\\/:*?"<>|]/g, '-')}.${ext}`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(()=> URL.revokeObjectURL(a.href), 4000);
-  }catch(e){ toast('تعذر التنزيل: ' + e.message, true); }
+  const a = document.createElement('a');
+  a.href = url + (url.indexOf('?') > -1 ? '&' : '?') + 'download=';
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }
 
 // ===== بطاقة المعلومات (صورة تُؤرشف) =====
