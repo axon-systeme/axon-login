@@ -199,7 +199,8 @@ const SLUGS = {
   "login-biometric-options": "smart-endpoint",
   "login-biometric-verify": "rapid-api",
   "save-photo-archive": "smart-service",
-  "get-archive-data": "dynamic-task"
+    "get-archive-data": "dynamic-task",
+  "storage-manage": "SLUG_STORAGE"
 };
 const ARCHIVE_ACCOUNT_NAME = "أرشيف المدرسة";
 const TYPE_LABEL = {
@@ -636,11 +637,12 @@ window.addEventListener('popstate', ()=>{
 // ===== عرض وتنزيل الوثائق =====
 async function signedUrl(path){
   try{
-    const r = await fetch(`${SUPABASE_URL}/storage/v1/object/sign/invoice-photos/${path}`, {
-      method:'POST', headers: headers(), body: JSON.stringify({ expiresIn: 600 })
+    const r = await fetch(fn('storage-manage'), {
+      method:'POST', headers: headers(),
+      body: JSON.stringify({ session_token: sessionToken, action:'sign', path })
     });
     const d = await r.json();
-    return d.signedURL ? `${SUPABASE_URL}/storage/v1${d.signedURL}` : null;
+    return (d.success && d.urls && d.urls[path]) ? d.urls[path] : null;
   }catch(e){ return null; }
 }
 
@@ -826,10 +828,15 @@ $('confirmUpload').addEventListener('click', async ()=>{
     await biometricCheck();
 
     btn.textContent = 'جاري رفع الملف...';
-    const ext = ((pendingFile.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5)) || 'bin';
-    const path = `${archiveAccountId}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const up = await fetch(`${SUPABASE_URL}/storage/v1/object/invoice-photos/${path}`, {
-      method:'POST',
+        const upRes = await fetch(fn('storage-manage'), {
+      method:'POST', headers: headers(),
+      body: JSON.stringify({ session_token: sessionToken, action:'upload_url', account_id: archiveAccountId, file_name: pendingFile.name, content_type: pendingFile.type || 'application/octet-stream' })
+    });
+    const upJson = await upRes.json();
+    if(!upJson.success) throw new Error(upJson.error || 'تعذر تجهيز الرفع.');
+    const path = upJson.path;
+    const up = await fetch(upJson.upload_url, {
+      method:'PUT',
       headers: { "Authorization": `Bearer ${ANON_KEY}`, "apikey": ANON_KEY, "Content-Type": pendingFile.type || 'application/octet-stream' },
       body: pendingFile
     });
