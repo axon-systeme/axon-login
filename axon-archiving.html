@@ -140,33 +140,33 @@
 <script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@10/dist/bundle/index.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-async function saveToDevice(url, fileName){
+function downloadPhoto(url){
+  var link = document.createElement('a');
+  link.href = url + (url.indexOf('?') > -1 ? '&' : '?') + 'download=';
+  link.rel = 'noopener';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+async function savePhoto(url){
+  const e = (url.split('?')[0].split('.').pop() || '').toLowerCase();
+  const ext = /^[a-z0-9]{2,5}$/.test(e) ? e : 'jpg';
   const MIME = { jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', webp:'image/webp', heic:'image/heic', pdf:'application/pdf' };
   try{
     const r = await fetch(url);
     if(!r.ok) throw new Error('fetch');
     const blob = await r.blob();
-    const ext = (fileName.split('.').pop() || '').toLowerCase();
-    const file = new File([blob], fileName, { type: MIME[ext] || blob.type || 'application/octet-stream' });
+    const file = new File([blob], 'وثيقة-' + Date.now() + '.' + ext, { type: MIME[ext] || blob.type || 'application/octet-stream' });
     if(navigator.canShare && navigator.canShare({ files: [file] })){
       await navigator.share({ files: [file] });
       return;
     }
-  }catch(e){
-    if(e && e.name === 'AbortError') return;
+    alert('جهازك لا يدعم الحفظ المباشر في المعرض. استعمل زر التحميل.');
+  }catch(err){
+    if(err && err.name === 'AbortError') return;
+    alert('تعذر الحفظ في المعرض. استعمل زر التحميل.');
   }
-  const a = document.createElement('a');
-  a.href = url + (url.indexOf('?') > -1 ? '&' : '?') + 'download=';
-  a.rel = 'noopener';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-}
-
-async function downloadPhoto(url){
-  const e = (url.split('?')[0].split('.').pop() || '').toLowerCase();
-  const ext = /^[a-z0-9]{2,5}$/.test(e) ? e : 'jpg';
-  await saveToDevice(url, 'وثيقة-' + Date.now() + '.' + ext);
 }
 function printInvoice(invNumber, archiverNm, dateStr, itemsHtml, totalVal){
   var win = window.open('', '_blank');
@@ -666,7 +666,7 @@ if(combined.length === 0){
         if(el){
           if(r.url){
                         const fullUrl = r.url;
-            el.innerHTML = `<a href="${fullUrl}" target="_blank">عرض</a><span class="act" onclick='downloadPhoto("${fullUrl}")'>تحميل</span><span class="act" onclick='printPhoto("${fullUrl}")'>طباعة</span>`;
+                       el.innerHTML = `<a href="${fullUrl}" target="_blank">عرض</a><span class="act" onclick='downloadPhoto("${fullUrl}")'>تحميل</span><span class="act" onclick='savePhoto("${fullUrl}")'>حفظ بالمعرض</span><span class="act" onclick='printPhoto("${fullUrl}")'>طباعة</span>`; 
           } else {
             el.textContent = 'تعذر تحميل الرابط.';
           }
