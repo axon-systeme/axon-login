@@ -498,6 +498,7 @@ function docRow(d, label){
     <div class="acts">
       <button class="mini ghost" data-view="${esc(d.image_path)}">عرض</button>
       <button class="mini" data-dl="${esc(d.image_path)}" data-name="${esc(label)}">تنزيل</button>
+            <button class="mini ghost" data-dl="${esc(d.image_path)}" data-name="${esc(label)}" data-mode="gallery">حفظ بالمعرض</button>
     </div>
   </div>`;
 }
