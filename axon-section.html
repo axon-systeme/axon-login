@@ -899,7 +899,7 @@ document.addEventListener('click', e=>{
   const t = e.target.closest('[data-view],[data-dl],[data-upload],[data-card],[data-open-section],[data-back],[data-add-section],[data-edit-section],[data-add-student],[data-edit-student]');
   if(!t) return;
   if(t.dataset.view) viewDoc(t.dataset.view);
-  else if(t.dataset.dl) downloadDoc(t.dataset.dl, t.dataset.name);
+    else if(t.dataset.dl) downloadDoc(t.dataset.dl, t.dataset.name, t.dataset.mode);
   else if(t.dataset.upload) openSheet(t.dataset.upload, t.dataset.person, t.dataset.section, t.dataset.owner);
   else if(t.dataset.card) archiveCard(t.dataset.card, t.dataset.card === 'student' ? t.dataset.person : t.dataset.section);
   else if(t.dataset.openSection) openSection(t.dataset.openSection);
