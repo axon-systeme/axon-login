@@ -656,6 +656,26 @@ async function viewDoc(path){
   async function downloadDoc(path, name){
   const url = await signedUrl(path);
   if(!url){ toast('تعذر تجهيز التنزيل.', true); return; }
+  const ext = (path.split('.').pop() || 'jpg').toLowerCase();
+  const clean = String(name || 'وثيقة').replace(/[\\/:*?"<>|]/g, '-');
+  await saveToDevice(url, `${clean}.${ext}`);
+}
+
+async function saveToDevice(url, fileName){
+  const MIME = { jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', webp:'image/webp', heic:'image/heic', pdf:'application/pdf' };
+  try{
+    const r = await fetch(url);
+    if(!r.ok) throw new Error('fetch');
+    const blob = await r.blob();
+    const ext = (fileName.split('.').pop() || '').toLowerCase();
+    const file = new File([blob], fileName, { type: MIME[ext] || blob.type || 'application/octet-stream' });
+    if(navigator.canShare && navigator.canShare({ files: [file] })){
+      await navigator.share({ files: [file] });
+      return;
+    }
+  }catch(e){
+    if(e && e.name === 'AbortError') return;
+  }
   const a = document.createElement('a');
   a.href = url + (url.indexOf('?') > -1 ? '&' : '?') + 'download=';
   a.rel = 'noopener';
