@@ -140,13 +140,33 @@
 <script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@10/dist/bundle/index.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-function downloadPhoto(url){
-  var link = document.createElement('a');
-  link.href = url + (url.indexOf('?') > -1 ? '&' : '?') + 'download=';
-  link.rel = 'noopener';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+async function saveToDevice(url, fileName){
+  const MIME = { jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', webp:'image/webp', heic:'image/heic', pdf:'application/pdf' };
+  try{
+    const r = await fetch(url);
+    if(!r.ok) throw new Error('fetch');
+    const blob = await r.blob();
+    const ext = (fileName.split('.').pop() || '').toLowerCase();
+    const file = new File([blob], fileName, { type: MIME[ext] || blob.type || 'application/octet-stream' });
+    if(navigator.canShare && navigator.canShare({ files: [file] })){
+      await navigator.share({ files: [file] });
+      return;
+    }
+  }catch(e){
+    if(e && e.name === 'AbortError') return;
+  }
+  const a = document.createElement('a');
+  a.href = url + (url.indexOf('?') > -1 ? '&' : '?') + 'download=';
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+async function downloadPhoto(url){
+  const e = (url.split('?')[0].split('.').pop() || '').toLowerCase();
+  const ext = /^[a-z0-9]{2,5}$/.test(e) ? e : 'jpg';
+  await saveToDevice(url, 'وثيقة-' + Date.now() + '.' + ext);
 }
 function printInvoice(invNumber, archiverNm, dateStr, itemsHtml, totalVal){
   var win = window.open('', '_blank');
