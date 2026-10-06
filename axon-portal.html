@@ -336,7 +336,7 @@ document.getElementById('btnSupport').addEventListener('click', async ()=>{
 });
 
 function goToDashboard(uid, token){
-  sessionStorage.setItem('axon_user_id', uid);
+        goToDashboard(verifyData.user_id || userId, verifyData.session_token);
   if(token) sessionStorage.setItem('axon_session_token', token);
   showPanel('panelSuccess');
   setTimeout(()=>{ window.location.href = `axon-account.html`; }, 1100);
