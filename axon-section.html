@@ -653,15 +653,24 @@ async function viewDoc(path){
   if(w) w.location.href = url; else window.location.href = url;
 }
 
-  async function downloadDoc(path, name){
+   async function downloadDoc(path, name, mode){
   const url = await signedUrl(path);
   if(!url){ toast('تعذر تجهيز التنزيل.', true); return; }
   const ext = (path.split('.').pop() || 'jpg').toLowerCase();
-  const clean = String(name || 'وثيقة').replace(/[\\/:*?"<>|]/g, '-');
-  await saveToDevice(url, `${clean}.${ext}`);
+  if(mode === 'gallery'){
+    const clean = String(name || 'وثيقة').replace(/[\\/:*?"<>|]/g, '-');
+    await shareToGallery(url, `${clean}.${ext}`);
+    return;
+  }
+  const a = document.createElement('a');
+  a.href = url + (url.indexOf('?') > -1 ? '&' : '?') + 'download=';
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }
 
-async function saveToDevice(url, fileName){
+async function shareToGallery(url, fileName){
   const MIME = { jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', webp:'image/webp', heic:'image/heic', pdf:'application/pdf' };
   try{
     const r = await fetch(url);
@@ -673,17 +682,12 @@ async function saveToDevice(url, fileName){
       await navigator.share({ files: [file] });
       return;
     }
+    toast('جهازك لا يدعم الحفظ المباشر في المعرض. استعمل «تنزيل».', true);
   }catch(e){
     if(e && e.name === 'AbortError') return;
+    toast('تعذر الحفظ في المعرض. استعمل «تنزيل».', true);
   }
-  const a = document.createElement('a');
-  a.href = url + (url.indexOf('?') > -1 ? '&' : '?') + 'download=';
-  a.rel = 'noopener';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
 }
-
 // ===== بطاقة المعلومات (صورة تُؤرشف) =====
 async function buildInfoCard(title, rows){
   try{ await document.fonts.load('600 26px "IBM Plex Sans Arabic"'); }catch(e){}
