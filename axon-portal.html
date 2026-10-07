@@ -336,7 +336,7 @@ document.getElementById('btnSupport').addEventListener('click', async ()=>{
 });
 
 function goToDashboard(uid, token){
-        goToDashboard(verifyData.user_id || userId, verifyData.session_token);
+      sessionStorage.setItem('axon_user_id', uid);
   if(token) sessionStorage.setItem('axon_session_token', token);
   showPanel('panelSuccess');
   setTimeout(()=>{ window.location.href = `axon-account.html`; }, 1100);
@@ -442,7 +442,7 @@ document.getElementById('btnBiometric').addEventListener('click', async ()=>{
     const verifyData = await verifyRes.json();
 
     if(verifyData.success){
-      goToDashboard(userId, verifyData.session_token);
+            goToDashboard(verifyData.user_id || userId, verifyData.session_token);
       return;
     }
    showMsg('msgBiometric', verifyData.error || t('err_biometric_failed'), 'err'); 
