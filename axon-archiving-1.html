@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AXON — الأرشفة</title>
+<style>
+  :root{
+    --ink:#0f1420; --ink-2:#161d2e; --ink-3:#232c42;
+    --slate:#8a93a8; --white:#e8ebf3; --gold:#c9a15a; --green:#3fa66f; --err:#e07a6b;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--ink);color:var(--white);font-family:'Segoe UI',Tahoma,Arial,sans-serif;padding:20px 14px 80px;}
+  h1{text-align:center;font-size:1.3rem;margin:0 0 6px;}
+  h2{font-size:1.05rem;margin:28px auto 10px;max-width:600px;color:var(--gold);}
+  .card{background:var(--ink-2);border:1px solid var(--ink-3);border-radius:10px;padding:16px;margin-bottom:16px;max-width:600px;margin-left:auto;margin-right:auto;}
+  label{display:block;font-size:0.82rem;color:var(--slate);margin-bottom:6px;}
+  input, textarea, select{
+    width:100%;padding:10px;border-radius:8px;border:1px solid var(--ink-3);
+    background:var(--ink);color:var(--white);font-size:0.95rem;margin-bottom:14px;
+  }
+  .mode-switch{display:flex;gap:8px;max-width:600px;margin:0 auto 16px;}
+  .mode-btn{
+    flex:1;padding:12px;border-radius:8px;border:1px solid var(--ink-3);
+    background:var(--ink-2);color:var(--slate);font-size:0.9rem;cursor:pointer;text-align:center;
+  }
+  .mode-btn.active{background:var(--gold);color:#14171c;border-color:var(--gold);font-weight:600;}
+  .photo-box{
+    border:2px dashed var(--gold);border-radius:10px;padding:20px;text-align:center;
+    cursor:pointer;margin-bottom:14px;
+  }
+  .photo-box img{max-width:100%;border-radius:8px;margin-top:10px;}
+  .archiver-box{
+    background:var(--ink-3);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:0.85rem;
+  }
+  .archiver-box b{color:var(--gold);}
+  .fp-btn{
+    width:100%;padding:14px;border:none;border-radius:8px;
+    background:linear-gradient(135deg,#3b6fd6,#5a8ef0);color:#fff;
+    font-size:1rem;font-weight:600;cursor:pointer;
+  }
+  .fp-btn:disabled{opacity:0.5;}
+  .msg{text-align:center;padding:12px;border-radius:8px;margin-top:12px;font-size:0.9rem;display:none;}
+  .msg.ok{display:block;background:rgba(63,166,111,.15);color:#7bd6a4;}
+  .msg.err{display:block;background:rgba(201,161,90,.14);color:var(--white);border-inline-start:3px solid var(--gold);}
+  .confirm-box{
+    background:var(--ink-3);border-radius:8px;padding:14px;margin-top:14px;font-size:0.85rem;line-height:1.8;
+  }
+  .archive-item{background:var(--ink-2);border:1px solid var(--ink-3);border-radius:10px;padding:14px;margin-bottom:12px;max-width:600px;margin-left:auto;margin-right:auto;font-size:0.9rem;}
+  .archive-item .head{display:flex;justify-content:space-between;font-weight:600;margin-bottom:6px;}
+  .archive-item .meta{color:var(--slate);font-size:0.82rem;margin-bottom:8px;}
+  .archive-item table{width:100%;border-collapse:collapse;margin-top:8px;}
+  .archive-item th, .archive-item td{padding:6px;border-bottom:1px solid var(--ink-3);text-align:right;font-size:0.82rem;}
+  .archive-item th{color:var(--slate);}
+  .archive-item .sum-row td{font-weight:700;color:var(--gold);border-top:2px solid var(--ink-3);}
+  .act-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .archive-item .act-btn{flex:1 1 calc(50% - 8px);min-height:44px;display:flex;align-items:center;justify-content:center;padding:8px;border-radius:8px;border:1px solid var(--ink-3);background:var(--ink-3);color:#5b9bd5;font-family:inherit;font-size:0.85rem;text-decoration:none;cursor:pointer;margin:0;}
+  .archive-item .act-btn:active{opacity:0.7;}
+  .account-name{text-align:center;color:var(--slate);margin-bottom:20px;}
+  .item-row{
+    display:grid;grid-template-columns:1fr;gap:6px;
+    margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--ink-3);
+  }
+  .item-row input{margin-bottom:0;}
+  .item-row-bottom{
+    display:grid;grid-template-columns:1fr 1fr 34px;gap:6px;align-items:center;
+  }
+  .item-row-bottom input{margin-bottom:0;padding:8px 6px;font-size:0.85rem;}
+  .remove-btn{background:none;border:none;color:var(--err);font-size:1.2rem;cursor:pointer;width:34px;height:34px;}
+  .add-btn{
+    background:var(--ink-3);color:var(--gold);border:1px dashed var(--gold);
+    border-radius:8px;padding:10px;width:100%;font-size:0.9rem;cursor:pointer;margin-top:4px;
+  }
+  .totals-box{
+    background:var(--ink-3);border-radius:8px;padding:12px 14px;margin-top:14px;font-size:1rem;
+  }
+  .tot-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;}
+  .tot-row + .tot-row{border-top:1px solid var(--ink-2);}
+  .tot-row b{color:var(--gold);}
+</style>
+</head>
+<body>
+
+<h1>AXON — الأرشفة</h1>
+<div class="account-name" id="accountNameLabel">جاري التحميل...</div>
+
+<div class="card">
+  <div class="archiver-box">
+    المؤرشف الحالي: <b id="archiverName">جاري التحميل...</b>
+  </div>
+</div>
+
+<div class="mode-switch">
+  <button class="mode-btn active" id="modePhotoBtn">📷 أرشفة بالصورة</button>
+  <button class="mode-btn" id="modeFormBtn">📝 استمارة يدوية</button>
+</div>
+
+<div class="card" id="photoModeCard">
+  <label>صورة الفاتورة / الوثيقة</label>
+  <div class="photo-box" id="photoBox">
+    <span id="photoLabel">اختر طريقة إضافة الصورة</span>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;">
+      <button type="button" id="cameraBtn" class="mode-btn" style="flex:1;">📷 التقط صورة</button>
+      <button type="button" id="galleryBtn" class="mode-btn" style="flex:1;">🖼️ من المعرض</button>
+    </div>
+    <input type="file" id="photoInputCamera" accept="image/*" capture="environment" style="display:none">
+    <input type="file" id="photoInputGallery" accept="image/*" style="display:none">
+    <img id="photoPreview" style="display:none">
+  </div>
+
+  <label>ملاحظة (اختياري)</label>
+  <textarea id="noteInput" rows="2" placeholder="مثال: فاتورة مواد غذائية شهر 09"></textarea>
+
+  <button class="fp-btn" id="confirmBtn">🔒 تأكيد الأرشفة ببصمة اليد</button>
+  <div class="msg" id="msgBox"></div>
+</div>
+
+<div class="card" id="formModeCard" style="display:none;">
+  <label>رقم الفاتورة</label>
+  <input type="text" id="invoiceNumber" placeholder="مثال: F-2026-045">
+
+  <div id="itemsContainer"></div>
+  <button class="add-btn" id="addItemBtn" type="button">+ إضافة مادة جديدة</button>
+
+  <div class="totals-box">
+    <div class="tot-row"><span>مجموع الوزن / الكمية</span><b id="totalWeight">0</b></div>
+    <div class="tot-row"><span>مجموع السعر</span><b id="totalPrice">0</b></div>
+  </div>
+
+  <button class="fp-btn" id="confirmFormBtn" style="margin-top:14px;">🔒 تأكيد الأرشفة ببصمة اليد</button>
+  <div class="msg" id="msgFormBox"></div>
+</div>
+
+<h2>الأرشيف</h2>
+<div id="archiveList">جاري التحميل...</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@10/dist/bundle/index.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+function esc(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function fmtNum(n){
+  return String(Math.round((Number(n) || 0) * 100) / 100);
+}
+
+// ===== تنزيل وحفظ الصور =====
+function downloadPhoto(url){
+  var link = document.createElement('a');
+  link.href = url + (url.indexOf('?') > -1 ? '&' : '?') + 'download=';
+  link.rel = 'noopener';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+async function savePhoto(url){
+  const m = url.split('?')[0].split('/object/sign/invoice-photos/')[1];
+  if(!m){ alert('رابط غير صالح.'); return; }
+  const path = decodeURIComponent(m);
+  const e = (path.split('.').pop() || '').toLowerCase();
+  const ext = /^[a-z0-9]{2,5}$/.test(e) ? e : 'jpg';
+  const MIME = { jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', webp:'image/webp', heic:'image/heic', pdf:'application/pdf' };
+  try{
+    const r = await fetch(fn('storage-manage'), {
+      method:'POST', headers: headers(),
+      body: JSON.stringify({ session_token: sessionToken, action:'file', path })
+    });
+    if(!r.ok) throw new Error('file ' + r.status);
+    const blob = await r.blob();
+    const file = new File([blob], 'وثيقة-' + Date.now() + '.' + ext, { type: MIME[ext] || blob.type || 'application/octet-stream' });
+    if(navigator.canShare && navigator.canShare({ files: [file] })){
+      await navigator.share({ files: [file] });
+      return;
+    }
+    alert('جهازك لا يدعم الحفظ المباشر في المعرض. استعمل زر التحميل.');
+  }catch(err){
+    if(err && err.name === 'AbortError') return;
+    alert('تعذر الحفظ في المعرض: ' + (err && err.message ? err.message : ''));
+  }
+}
+
+function printPhoto(url){
+  var win = window.open('', '_blank');
+  if(!win){ alert('المتصفح منع النافذة. اسمح بالنوافذ المنبثقة ثم أعد المحاولة.'); return; }
+  win.document.write('<img src="' + esc(url) + '" style="max-width:100%" onload="window.print()">');
+  win.document.close();
+}
+
+// ===== الفواتير: عرض وطباعة وتنزيل =====
+let invoiceStore = [];
+
+function invoiceBodyHtml(inv){
+  const cell = 'padding:8px;border:1px solid #ccc;text-align:right;';
+  const head = cell + 'background:#f0f0f0;font-weight:bold;';
+  let rows = '', sumW = 0;
+  (inv.items || []).forEach(function(it){
+    sumW += Number(it.weight) || 0;
+    rows += '<tr><td style="' + cell + '">' + esc(it.item_name) + '</td><td style="' + cell + '">' + esc(it.weight) + '</td><td style="' + cell + '">' + esc(it.line_total) + '</td></tr>';
+  });
+  return '' +
+    '<h1 style="text-align:center;font-size:1.4rem;margin:0 0 4px;">AXON — فاتورة رقم ' + esc(inv.number) + '</h1>' +
+    '<div style="text-align:center;color:#7d8493;margin-bottom:24px;">التاريخ: ' + esc(inv.date) + '</div>' +
+    '<table style="width:100%;border-collapse:collapse;margin-bottom:20px;">' +
+      '<tr><th style="' + head + '">المادة</th><th style="' + head + '">الوزن/الكمية</th><th style="' + head + '">السعر</th></tr>' +
+      rows +
+      '<tr><td style="' + head + '">المجموع</td><td style="' + head + '">' + esc(fmtNum(sumW)) + '</td><td style="' + head + '">' + esc(inv.total) + '</td></tr>' +
+    '</table>' +
+    '<div style="border-top:1px solid #ccc;padding-top:14px;font-size:0.85rem;color:#555;">' +
+      'المؤرشف: ' + esc(inv.archiver) + '<br>موثق ببصمة اليد — لا يمكن التعديل أو الحذف' +
+    '</div>';
+}
+
+function printInvoiceIdx(i){
+  const inv = invoiceStore[i];
+  if(!inv) return;
+  var win = window.open('', '_blank');
+  if(!win){ alert('المتصفح منع النافذة. اسمح بالنوافذ المنبثقة ثم أعد المحاولة.'); return; }
+  win.document.write(
+    '<html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>' +
+    "body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;padding:30px;color:#14171c;}" +
+    '</style></head><body>' + invoiceBodyHtml(inv) +
+    '<script>window.onload=function(){window.print();}<\/script></body></html>'
+  );
+  win.document.close();
+}
+
+function downloadInvoiceIdx(i){
+  const inv = invoiceStore[i];
+  if(!inv) return;
+  var wrapper = document.createElement('div');
+  wrapper.style.position = 'fixed';
+  wrapper.style.left = '-9999px';
+  wrapper.style.top = '0';
+  wrapper.style.width = '600px';
+  wrapper.style.background = '#ffffff';
+  wrapper.style.color = '#14171c';
+  wrapper.style.fontFamily = "'Segoe UI',Tahoma,Arial,sans-serif";
+  wrapper.style.padding = '30px';
+  wrapper.dir = 'rtl';
+  wrapper.lang = 'ar';
+  wrapper.innerHTML = invoiceBodyHtml(inv);
+  document.body.appendChild(wrapper);
+
+  html2canvas(wrapper, { backgroundColor: '#ffffff', scale: 2 }).then(function(canvas){
+    canvas.toBlob(function(blob){
+      var objUrl = (self.URL || self.webkitURL).createObjectURL(blob);
+      var link = document.createElement('a');
+      link.href = objUrl;
+      link.download = 'فاتورة-' + String(inv.number).replace(/[\\/:*?"<>|]/g, '-') + '.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      document.body.removeChild(wrapper);
+    }, 'image/png');
+  }).catch(function(e){
+    document.body.removeChild(wrapper);
+    alert('تعذر تحميل الفاتورة كصورة: ' + e.message);
+  });
+}
+
+const SUPABASE_URL = "https://tmizzjieyeqbcxuxoucw.supabase.co";
+const ANON_KEY = "sb_publishable_0MXFCqGL0eqkteVozjLtDQ_VCmGeXhM";
+
+const REAL_SLUGS = {
+  "get-user-context": "bright-handler",
+  "login-biometric-options": "smart-endpoint",
+  "login-biometric-verify": "rapid-api",
+  "save-invoice-archive": "hyper-worker",
+  "get-archive-data": "dynamic-task",
+  "save-photo-archive": "smart-service",
+  "get-dashboard-data": "clever-handler",
+  "storage-manage": "rapid-api"
+};
+function fn(name){
+  const slug = REAL_SLUGS[name] || name;
+  return `${SUPABASE_URL}/functions/v1/${slug}`;
+}
+function headers(){
+  return {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${ANON_KEY}`,
+    "apikey": ANON_KEY
+  };
+}
+
+const params = new URLSearchParams(window.location.search);
+const userId = sessionStorage.getItem('axon_user_id');
+const sessionToken = sessionStorage.getItem('axon_session_token');
+const accountId = params.get('id');
+
+if(!userId || !sessionToken){
+  window.location.href = "axon-portal.html";
+}
+if(!accountId){
+  document.getElementById('accountNameLabel').textContent = 'خطأ: لم يتم تحديد الحساب.';
+}
+
+let currentUserEmail = null;
+let selectedFile = null;
+
+document.getElementById('modePhotoBtn').addEventListener('click', function(){
+  this.classList.add('active');
+  document.getElementById('modeFormBtn').classList.remove('active');
+  document.getElementById('photoModeCard').style.display = 'block';
+  document.getElementById('formModeCard').style.display = 'none';
+});
+document.getElementById('modeFormBtn').addEventListener('click', function(){
+  this.classList.add('active');
+  document.getElementById('modePhotoBtn').classList.remove('active');
+  document.getElementById('formModeCard').style.display = 'block';
+  document.getElementById('photoModeCard').style.display = 'none';
+});
+
+async function loadArchiverInfo(){
+  try{
+    const res = await fetch(fn('get-user-context'), {
+      method:'POST', headers: headers(), body: JSON.stringify({ session_token: sessionToken })
+    });
+    const data = await res.json();
+    if(data.success){
+      currentUserEmail = data.user.email;
+      document.getElementById('archiverName').textContent = data.user.full_name || data.user.email;
+    }
+  }catch(e){
+    document.getElementById('archiverName').textContent = 'تعذر التحميل';
+  }
+}
+loadArchiverInfo();
+
+async function loadAccountName(){
+  try{
+    const res = await fetch(fn('get-dashboard-data'), {
+      method:'POST', headers: headers(),
+      body: JSON.stringify({ session_token: sessionToken, resource: 'account_name', account_id: accountId })
+    });
+    const data = await res.json();
+    document.getElementById('accountNameLabel').textContent = data.success ? data.name : (data.error || 'حساب غير معروف');
+  }catch(e){
+    document.getElementById('accountNameLabel').textContent = 'تعذر تحميل اسم الحساب';
+  }
+}
+if(accountId) loadAccountName();
+
+document.getElementById('cameraBtn').addEventListener('click', function(e){
+  e.stopPropagation();
+  document.getElementById('photoInputCamera').click();
+});
+document.getElementById('galleryBtn').addEventListener('click', function(e){
+  e.stopPropagation();
+  document.getElementById('photoInputGallery').click();
+});
+
+function handlePhotoSelect(e){
+  selectedFile = e.target.files[0];
+  if(selectedFile){
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      document.getElementById('photoPreview').src = ev.target.result;
+      document.getElementById('photoPreview').style.display = 'block';
+      document.getElementById('photoLabel').textContent = 'تم اختيار الصورة — اضغط أي زر لتغييرها';
+    };
+    reader.readAsDataURL(selectedFile);
+  }
+}
+document.getElementById('photoInputCamera').addEventListener('change', handlePhotoSelect);
+document.getElementById('photoInputGallery').addEventListener('change', handlePhotoSelect);
+
+async function doBiometricCheck(){
+  if(!currentUserEmail){
+    throw new Error('تعذر التعرف على المستخدم الحالي. سجّل الدخول من جديد.');
+  }
+  if(!window.PublicKeyCredential){
+    throw new Error('هذا الجهاز/المتصفح لا يدعم البصمة (WebAuthn).');
+  }
+  const optRes = await fetch(fn('login-biometric-options'), {
+    method:'POST', headers: headers(), body: JSON.stringify({ email: currentUserEmail })
+  });
+  const options = await optRes.json();
+  if(options.error){ throw new Error(options.error); }
+
+  const authResp = await SimpleWebAuthnBrowser.startAuthentication(options);
+
+  const verifyRes = await fetch(fn('login-biometric-verify'), {
+    method:'POST', headers: headers(),
+    body: JSON.stringify({ user_id: userId, assertion_response: authResp })
+  });
+  const verifyData = await verifyRes.json();
+  if(!verifyData.success){
+    throw new Error(verifyData.error || 'فشل التحقق من البصمة.');
+  }
+}
+
+document.getElementById('confirmBtn').addEventListener('click', async function(){
+  const btn = this;
+  const msgBox = document.getElementById('msgBox');
+  msgBox.className = 'msg';
+
+  const note = document.getElementById('noteInput').value.trim();
+
+  if(!accountId){
+    msgBox.className = 'msg err';
+    msgBox.textContent = 'لم يتم تحديد الحساب.';
+    return;
+  }
+  if(!selectedFile){
+    msgBox.className = 'msg err';
+    msgBox.textContent = 'أضف صورة الفاتورة أولاً.';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'جاري التحقق من البصمة...';
+
+  try{
+    await doBiometricCheck();
+
+    btn.textContent = 'جاري رفع الصورة...';
+    const upRes = await fetch(fn('storage-manage'), {
+      method:'POST', headers: headers(),
+      body: JSON.stringify({ session_token: sessionToken, action:'upload_url', account_id: accountId, file_name: selectedFile.name, content_type: selectedFile.type || 'application/octet-stream' })
+    });
+    const upJson = await upRes.json();
+    if(!upJson.success) throw new Error(upJson.error || 'تعذر تجهيز الرفع.');
+    const fileName = upJson.path;
+    const uploadRes = await fetch(upJson.upload_url, {
+      method:'PUT',
+      headers: { "Authorization": `Bearer ${ANON_KEY}`, "apikey": ANON_KEY, "Content-Type": selectedFile.type || 'application/octet-stream' },
+      body: selectedFile
+    });
+    if(!uploadRes.ok){
+      const errText = await uploadRes.text();
+      throw new Error('فشل رفع الصورة: ' + uploadRes.status + ' - ' + errText);
+    }
+
+    const insertRes = await fetch(fn('save-photo-archive'), {
+      method:'POST',
+      headers: headers(),
+      body: JSON.stringify({
+        session_token: sessionToken,
+        account_id: accountId,
+        image_path: fileName,
+        note: note || null
+      })
+    });
+    const insertJson = await insertRes.json();
+    if(!insertJson.success){
+      throw new Error(insertJson.error || 'فشل تسجيل الأرشفة.');
+    }
+
+    const savedAt = new Date(insertJson.record.created_at);
+
+    msgBox.className = 'msg ok';
+    msgBox.innerHTML = `تمت الأرشفة بنجاح ✅
+      <div class="confirm-box">
+        المؤرشف: ${esc(currentUserEmail)}<br>
+        الوقت: ${esc(savedAt.toLocaleTimeString('ar'))}<br>
+        التاريخ: ${esc(savedAt.toLocaleDateString('ar'))}<br>
+        لا يمكن تعديل أو حذف هذا السجل نهائيًا.
+      </div>`;
+
+    selectedFile = null;
+    document.getElementById('photoPreview').style.display = 'none';
+    document.getElementById('photoLabel').textContent = 'اختر طريقة إضافة الصورة';
+    document.getElementById('noteInput').value = '';
+
+    loadArchiveList();
+
+  }catch(e){
+    msgBox.className = 'msg err';
+    msgBox.textContent = 'خطأ: ' + e.message;
+  }finally{
+    btn.disabled = false;
+    btn.textContent = '🔒 تأكيد الأرشفة ببصمة اليد';
+  }
+});
+
+// ===== استمارة يدوية: المجاميع عمودية (الوزن مع الوزن، والسعر مع السعر) =====
+let itemRowCount = 0;
+
+function recalcTotals(){
+  let w = 0, p = 0;
+  document.querySelectorAll('#itemsContainer .item-row').forEach(function(row){
+    w += parseFloat(row.querySelector('.item-weight').value) || 0;
+    p += parseFloat(row.querySelector('.item-price').value) || 0;
+  });
+  document.getElementById('totalWeight').textContent = fmtNum(w);
+  document.getElementById('totalPrice').textContent = fmtNum(p);
+}
+
+function addItemRow(){
+  itemRowCount++;
+  const container = document.getElementById('itemsContainer');
+  const row = document.createElement('div');
+  row.className = 'item-row';
+  row.dataset.rowId = itemRowCount;
+  row.innerHTML = `
+    <input type="text" class="item-name" placeholder="اسم المادة (مثال: بطاطا)">
+    <div class="item-row-bottom">
+      <input type="number" class="item-weight" placeholder="الوزن/الكمية" step="any" min="0" inputmode="decimal">
+      <input type="number" class="item-price" placeholder="السعر" step="any" min="0" inputmode="decimal">
+      <button class="remove-btn" type="button">✕</button>
+    </div>
+  `;
+  container.appendChild(row);
+
+  row.querySelector('.item-weight').addEventListener('input', recalcTotals);
+  row.querySelector('.item-price').addEventListener('input', recalcTotals);
+  row.querySelector('.remove-btn').addEventListener('click', function(){
+    row.remove();
+    recalcTotals();
+  });
+}
+
+document.getElementById('addItemBtn').addEventListener('click', addItemRow);
+addItemRow();
+addItemRow();
+
+document.getElementById('confirmFormBtn').addEventListener('click', async function(){
+  const btn = this;
+  const msgBox = document.getElementById('msgFormBox');
+  msgBox.className = 'msg';
+
+  const invoiceNumber = document.getElementById('invoiceNumber').value.trim();
+
+  if(!accountId){
+    msgBox.className = 'msg err';
+    msgBox.textContent = 'لم يتم تحديد الحساب.';
+    return;
+  }
+  if(!invoiceNumber){
+    msgBox.className = 'msg err';
+    msgBox.textContent = 'أدخل رقم الفاتورة.';
+    return;
+  }
+
+  const items = [];
+  document.querySelectorAll('#itemsContainer .item-row').forEach(function(row){
+    const name = row.querySelector('.item-name').value.trim();
+    const weight = parseFloat(row.querySelector('.item-weight').value) || 0;
+    const price = parseFloat(row.querySelector('.item-price').value) || 0;
+    if(name && (weight > 0 || price > 0)){
+      items.push({ item_name: name, weight: weight, unit_price: price, line_total: price });
+    }
+  });
+
+  if(items.length === 0){
+    msgBox.className = 'msg err';
+    msgBox.textContent = 'أضف مادة واحدة على الأقل بوزن أو سعر صحيح.';
+    return;
+  }
+
+  const totalWeight = items.reduce((sum, it) => sum + it.weight, 0);
+  const totalPrice = items.reduce((sum, it) => sum + it.line_total, 0);
+
+  btn.disabled = true;
+  btn.textContent = 'جاري التحقق من البصمة...';
+
+  try{
+    await doBiometricCheck();
+
+    btn.textContent = 'جاري الحفظ...';
+
+    const invRes = await fetch(fn('save-invoice-archive'), {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({
+        session_token: sessionToken,
+        account_id: accountId,
+        invoice_number: invoiceNumber,
+        items: items,
+        total_value: totalPrice
+      })
+    });
+    const invJson = await invRes.json();
+    if(!invJson.success){
+      throw new Error(invJson.error || 'فشل إنشاء الفاتورة.');
+    }
+
+    msgBox.className = 'msg ok';
+    msgBox.textContent = `تم حفظ الفاتورة بنجاح (${items.length} مادة، مجموع الوزن: ${fmtNum(totalWeight)}، مجموع السعر: ${fmtNum(totalPrice)}). لا يمكن التعديل عليها بعد الآن.`;
+
+    document.getElementById('invoiceNumber').value = '';
+    document.getElementById('itemsContainer').innerHTML = '';
+    itemRowCount = 0;
+    addItemRow();
+    addItemRow();
+    recalcTotals();
+
+    loadArchiveList();
+
+  }catch(e){
+    msgBox.className = 'msg err';
+    msgBox.textContent = 'خطأ: ' + e.message;
+  }finally{
+    btn.disabled = false;
+    btn.textContent = '🔒 تأكيد الأرشفة ببصمة اليد';
+  }
+});
+
+// ===== قائمة الأرشيف =====
+function photoActionsHtml(url){
+  return '<div class="act-row">' +
+    '<a class="act-btn" href="' + esc(url) + '" target="_blank" rel="noopener">👁 عرض</a>' +
+    '<button type="button" class="act-btn" onclick=\'downloadPhoto("' + esc(url) + '")\'>⬇ تحميل</button>' +
+    '<button type="button" class="act-btn" onclick=\'savePhoto("' + esc(url) + '")\'>🖼 حفظ بالمعرض</button>' +
+    '<button type="button" class="act-btn" onclick=\'printPhoto("' + esc(url) + '")\'>🖨 طباعة</button>' +
+  '</div>';
+}
+
+function loadArchiveList(){
+  const container = document.getElementById('archiveList');
+  if(!accountId){ container.innerHTML = ''; return; }
+
+  fetch(fn('get-archive-data'), {
+    method:'POST', headers: headers(), body: JSON.stringify({ session_token: sessionToken, account_id: accountId })
+  }).then(r=>r.json()).then(function(data){
+    if(!data.success){
+      container.innerHTML = 'تعذر تحميل الأرشيف: ' + esc(data.error || 'خطأ غير معروف');
+      return;
+    }
+    const users = data.users || [];
+    const photos = data.photos;
+    const invoices = data.invoices;
+    const userMap = {};
+    users.forEach(u=>{ userMap[u.id] = u.full_name || u.email; });
+    const photoArr = Array.isArray(photos) ? photos.map(p=>({ ...p, _type:'photo' })) : [];
+    const invArr = Array.isArray(invoices) ? invoices.map(i=>({ ...i, _type:'invoice' })) : [];
+    const combined = [...photoArr, ...invArr].sort((a,b)=> new Date(b.created_at) - new Date(a.created_at));
+
+    if(combined.length === 0){
+      container.innerHTML = 'لا توجد عناصر مؤرشفة بعد.';
+      return;
+    }
+
+    invoiceStore = [];
+    const photoItems = [];
+    let html = '';
+
+    combined.forEach((item, idx)=>{
+      const archiverNm = userMap[item.archived_by] || item.archived_by || '';
+      const date = (item.created_at || item.archived_at) ? new Date(item.created_at || item.archived_at).toLocaleString('ar') : '';
+
+      if(item._type === 'photo'){
+        html += `<div class="archive-item" id="archItem${idx}">`;
+        html += `<div class="head"><span>📷 صورة</span><span>${esc(date)}</span></div>`;
+        html += `<div class="meta">المؤرشف: ${esc(archiverNm)}${item.note ? ' — ' + esc(item.note) : ''}</div>`;
+        html += `<div id="archAct${idx}">جاري تحميل الرابط...</div>`;
+        html += `</div>`;
+        photoItems.push({ idx, path: item.image_path });
+      } else {
+        const invIdx = invoiceStore.length;
+        const totalTxt = fmtNum(item.total_value);
+        invoiceStore.push({
+          number: item.invoice_number,
+          archiver: archiverNm,
+          date: date,
+          items: item.invoice_items || [],
+          total: totalTxt
+        });
+
+        let rowsHtml = '', sumW = 0;
+        (item.invoice_items || []).forEach(it=>{
+          sumW += Number(it.weight) || 0;
+          rowsHtml += `<tr><td>${esc(it.item_name)}</td><td>${esc(it.weight)}</td><td>${esc(it.line_total)}</td></tr>`;
+        });
+
+        html += `<div class="archive-item">`;
+        html += `<div class="head"><span>📝 فاتورة رقم ${esc(item.invoice_number)}</span><span>${esc(date)}</span></div>`;
+        html += `<div class="meta">المؤرشف: ${esc(archiverNm)}</div>`;
+        html += `<table><tr><th>المادة</th><th>الوزن/الكمية</th><th>السعر</th></tr>${rowsHtml}`;
+        html += `<tr class="sum-row"><td>المجموع</td><td>${esc(fmtNum(sumW))}</td><td>${esc(totalTxt)}</td></tr></table>`;
+        html += `<div class="act-row"><button type="button" class="act-btn" onclick="printInvoiceIdx(${invIdx})">🖨 عرض/طباعة</button><button type="button" class="act-btn" onclick="downloadInvoiceIdx(${invIdx})">⬇ تحميل</button></div>`;
+        html += `</div>`;
+      }
+    });
+
+    container.innerHTML = html;
+
+    // روابط الصور المؤقتة: طلب واحد لكل 50 ملفًا
+    for(let i = 0; i < photoItems.length; i += 50){
+      const chunk = photoItems.slice(i, i + 50);
+      fetch(fn('storage-manage'), {
+        method:'POST', headers: headers(),
+        body: JSON.stringify({ session_token: sessionToken, action:'sign', paths: chunk.map(p => p.path) })
+      }).then(r=>r.json()).then(function(s){
+        chunk.forEach(function(p){
+          const el = document.getElementById('archAct' + p.idx);
+          if(!el) return;
+          const url = (s && s.urls) ? s.urls[p.path] : null;
+          if(url){ el.innerHTML = photoActionsHtml(url); }
+          else { el.textContent = 'تعذر تحميل الرابط.'; }
+        });
+      }).catch(function(){
+        chunk.forEach(function(p){
+          const el = document.getElementById('archAct' + p.idx);
+          if(el) el.textContent = 'تعذر تحميل الرابط.';
+        });
+      });
+    }
+  }).catch(e=>{
+    container.innerHTML = 'تعذر تحميل الأرشيف: ' + esc(e.message);
+  });
+}
+loadArchiveList();
+
+// ===== نظام الترجمة الأوتوماتيكي =====
+const I18N_FN = "clever-service";
+function currentLang(){ return localStorage.getItem('axon_lang') || 'ar'; }
+
+function collectTextNodes(root){
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(node){
+      const t = node.nodeValue.trim();
+      if(!t) return NodeFilter.FILTER_REJECT;
+      if(!/[\u0600-\u06FF]/.test(t)) return NodeFilter.FILTER_REJECT;
+      const tag = node.parentElement ? node.parentElement.tagName : '';
+      if(tag === 'SCRIPT' || tag === 'STYLE') return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  const nodes = [];
+  let n;
+  while((n = walker.nextNode())) nodes.push(n);
+  return nodes;
+}
+
+async function translatePage(){
+  const lang = currentLang();
+  if(lang === 'ar') return;
+
+  const nodes = collectTextNodes(document.body);
+  const texts = [...new Set(nodes.map(n => n.nodeValue.trim()))];
+  if(texts.length === 0) return;
+
+  try{
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/${I18N_FN}`, {
+      method:'POST', headers: headers(),
+      body: JSON.stringify({ session_token: sessionToken, lang, texts })
+    });
+    const data = await res.json();
+    if(!data.success) return;
+
+    nodes.forEach(node => {
+      const orig = node.nodeValue.trim();
+      const translated = data.translations[orig];
+      if(translated) node.nodeValue = node.nodeValue.replace(orig, translated);
+    });
+  }catch(e){
+    console.error('translation error', e);
+  }
+}
+
+function setLang(lang){
+  localStorage.setItem('axon_lang', lang);
+  location.reload();
+}
+</script>
+
+</body>
+</html>
