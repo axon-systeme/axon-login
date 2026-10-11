@@ -545,13 +545,13 @@ function currentLang(){ return localStorage.getItem('axon_lang') || 'ar'; }
 
 function collectTextNodes(root){
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-          if(node.parentElement && node.parentElement.closest('[translate="no"], #profileName, #profileEmail, #profileOrg, #employeesList, #protectedAccountsList, #sectionsList, #studentsList, #messagesList, #notifList, #ticketsList, #recAdminList, #devicesList')) return NodeFilter.FILTER_REJECT;
     acceptNode(node){
       const t = node.nodeValue.trim();
       if(!t) return NodeFilter.FILTER_REJECT;
       if(!/[\u0600-\u06FF]/.test(t)) return NodeFilter.FILTER_REJECT;
       const tag = node.parentElement ? node.parentElement.tagName : '';
       if(tag === 'SCRIPT' || tag === 'STYLE') return NodeFilter.FILTER_REJECT;
+            if(node.parentElement && node.parentElement.closest('[translate="no"], #profileName, #profileEmail, #profileOrg, #employeesList, #protectedAccountsList, #sectionsList, #studentsList, #messagesList, #notifList, #ticketsList, #recAdminList, #devicesList, #archiveAccountSelect')) return NodeFilter.FILTER_REJECT;
       return NodeFilter.FILTER_ACCEPT;
     }
   });
