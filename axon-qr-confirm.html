@@ -176,7 +176,8 @@ async function init(){
   const storedUid = sessionStorage.getItem('axon_user_id');
   const storedEmail = sessionStorage.getItem('axon_user_email');
 
-  if(storedUid){
+   const storedTok = sessionStorage.getItem('axon_session_token') || '';
+  if(storedUid && storedTok.split('.').length === 2){ 
     currentUserId = storedUid;
     currentUserEmail = storedEmail || '';
     document.getElementById('confirmEmailLabel').textContent = currentUserEmail || '(الحساب الحالي)';
