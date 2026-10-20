@@ -201,8 +201,8 @@ async function doConfirm(userId){
    showMsg('msgConfirm', (data.error || 'تعذر تأكيد الرمز.') + ' | DEBUG: ' + JSON.stringify(data), 'err');
 showMsg('msgLogin', (data.error || 'تعذر تأكيد الرمز.') + ' | DEBUG: ' + JSON.stringify(data), 'err'); 
   }catch(e){
-    showMsg('msgConfirm', 'تعذر الاتصال بالسيرفر.', 'err');
-    showMsg('msgLogin', 'تعذر الاتصال بالسيرفر.', 'err');
+        showMsg('msgConfirm', 'تعذر الاتصال: ' + (e.name || '') + ' — ' + (e.message || ''), 'err');
+    showMsg('msgLogin', 'تعذر الاتصال: ' + (e.name || '') + ' — ' + (e.message || ''), 'err');
   }
 }
 
