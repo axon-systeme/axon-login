@@ -186,11 +186,11 @@ async function init(){
     showPanel('panelLogin');
   }
 }
-async function doConfirm(userId){
+async function doConfirm(userId, sessionTok){
   try{
     const res = await fetch(fn('qr-login-confirm'), {
       method:'POST', headers: headers(),
-      body: JSON.stringify({ token, confirming_user_id: userId })
+            body: JSON.stringify({ token, confirming_user_id: userId, confirming_session_token: sessionTok || sessionStorage.getItem('axon_session_token') })
     });
     const data = await res.json();
 
@@ -198,18 +198,18 @@ async function doConfirm(userId){
       showPanel('panelSuccess');
       return;
     }
-   showMsg('msgConfirm', (data.error || 'تعذر تأكيد الرمز.') + ' | DEBUG: ' + JSON.stringify(data), 'err');
-showMsg('msgLogin', (data.error || 'تعذر تأكيد الرمز.') + ' | DEBUG: ' + JSON.stringify(data), 'err'); 
+       showMsg('msgConfirm', data.error || 'تعذر تأكيد الرمز.', 'err');
+    showMsg('msgLogin', data.error || 'تعذر تأكيد الرمز.', 'err');
   }catch(e){
-        showMsg('msgConfirm', 'تعذر الاتصال: ' + (e.name || '') + ' — ' + (e.message || ''), 'err');
-    showMsg('msgLogin', 'تعذر الاتصال: ' + (e.name || '') + ' — ' + (e.message || ''), 'err');
+           showMsg('msgConfirm', 'تعذر الاتصال بالسيرفر.', 'err');
+    showMsg('msgLogin', 'تعذر الاتصال بالسيرفر.', 'err'); 
   }
 }
 
 document.getElementById('btnConfirmNow').addEventListener('click', async ()=>{
   const btn = document.getElementById('btnConfirmNow');
   btn.disabled = true; btn.textContent = 'جاري التأكيد...';
-  await doConfirm(currentUserId);
+   await doConfirm(currentUserId, sessionStorage.getItem('axon_session_token')); 
   btn.disabled = false; btn.textContent = 'تأكيد الدخول';
 });
 
@@ -233,8 +233,9 @@ document.getElementById('btnLoginConfirm').addEventListener('click', async ()=>{
     if(data.success){
       sessionStorage.setItem('axon_user_id', data.user_id);
       sessionStorage.setItem('axon_user_email', email);
-      showMsg('msgLogin','تم تسجيل الدخول، جاري التأكيد...','ok');
-      await doConfirm(data.user_id);
+            if(data.session_token) sessionStorage.setItem('axon_session_token', data.session_token);
+           await doConfirm(data.user_id, data.session_token); 
+      
     }else{
       showMsg('msgLogin', data.error || 'بيانات الدخول غير صحيحة.', 'err');
     }
