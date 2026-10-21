@@ -911,6 +911,7 @@ document.addEventListener('click', e=>{
   else if(t.dataset.editSection) editSectionForm(t.dataset.editSection);
   else if(t.dataset.addStudent) addStudentForm(t.dataset.addStudent);
   else if(t.dataset.editStudent) editStudentForm(t.dataset.editStudent);
+  });
   // ===== نظام الترجمة الأوتوماتيكي =====
 const I18N_FN = "clever-service";
 function currentLang(){ return localStorage.getItem('axon_lang') || 'ar'; }
@@ -962,7 +963,6 @@ function setLang(lang){
   localStorage.setItem('axon_lang', lang);
   location.reload();
 }
-});
 
 loadAll();
 </script>
