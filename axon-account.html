@@ -743,7 +743,7 @@ async function applyOrgModules(){
   setShown(document.getElementById('cardEmployeesList'), emp);
   setShown(document.getElementById('cardProtectedAccounts'), prot);
   setShown(document.getElementById('cardHomeEmpty'), false);
-  setShown(document.querySelector('.tab-btn[data-tab="tabHome"]'), emp || prot || secs || stud);
+   setShown(document.querySelector('.tab-btn[data-tab="tabHome"]'), emp || prot); 
   setShown(document.querySelector('.tab-btn[data-tab="tabArchiving"]'), arch);
 
   if(emp)  loadEmployees();
