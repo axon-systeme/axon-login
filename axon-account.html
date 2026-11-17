@@ -1431,6 +1431,98 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
   });
 });
 </script>
+ <style>
+#axonWelcome{position:fixed;inset:0;z-index:20000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center;color:#fff;font-family:'IBM Plex Sans Arabic',sans-serif;background:radial-gradient(900px 700px at 50% 20%,#0b2a55 0%,#050a18 70%);}
+#axonWelcome.show{display:flex;}
+#axonWelcome img{width:min(62vw,280px);aspect-ratio:1;object-fit:cover;border-radius:50%;box-shadow:0 0 30px rgba(66,150,255,.45);}
+#axonWelcome.speaking img{animation:awPulse 1.3s infinite;}
+@keyframes awPulse{0%,100%{box-shadow:0 0 25px rgba(66,150,255,.4);}50%{box-shadow:0 0 55px rgba(90,170,255,.9);}}
+#awGreet{font-family:'Zilla Slab',serif;font-size:1.25rem;font-weight:700;color:#8cc4ff;}
+#awText{max-width:380px;font-size:.9rem;line-height:1.8;color:#dbe7f5;}
+#awPlay{width:100%;max-width:300px;padding:12px;border:none;border-radius:10px;font-family:inherit;font-weight:600;font-size:.92rem;cursor:pointer;background:linear-gradient(135deg,#1a5fb4,#4a9eff);color:#fff;}
+#awSkip{background:none;border:none;color:#8a96a8;font-family:inherit;font-size:.8rem;cursor:pointer;text-decoration:underline;}
+</style>
+
+<div id="axonWelcome">
+  <img src="axon-robot.png" alt="AXON AI">
+  <div id="awGreet"></div>
+  <div id="awText"></div>
+  <button id="awPlay"></button>
+  <button id="awSkip"></button>
+</div>
+
+<script>
+(function(){
+  const uid = sessionStorage.getItem('axon_user_id');
+  const KEY = 'axon_welcomed_' + uid;
+  const force = new URLSearchParams(location.search).get('welcome') === '1';
+  if(!uid || (!force && localStorage.getItem(KEY))) return;
+
+  const TEXTS = {
+    ar:{ dir:'rtl', hi:'مرحبًا', tts:'ar-SA', audio:'welcome-ar.mp3', play:'🔊 استمع', enter:'دخول ←', skip:'تخطي',
+         body:'مرحبًا بك في AXON. أنا المساعد الذكي للنظام. هنا تُحفظ بياناتك وأرشيفك بأمان، وكل عملية تُسجَّل باسم صاحبها وتاريخها. يسعدنا انضمامك، تفضّل بالدخول.' },
+    fr:{ dir:'ltr', hi:'Bonjour', tts:'fr-FR', audio:'welcome-fr.mp3', play:'🔊 Écouter', enter:'Entrer →', skip:'Passer',
+         body:"Bienvenue sur AXON. Je suis l'assistant du système. Vos données et vos archives sont conservées en toute sécurité, et chaque opération est enregistrée avec son auteur et sa date. Ravi de vous compter parmi nous." },
+    en:{ dir:'ltr', hi:'Hello', tts:'en-US', audio:'welcome-en.mp3', play:'🔊 Listen', enter:'Enter →', skip:'Skip',
+         body:"Welcome to AXON. I'm the system's assistant. Your data and archives are kept safe, and every action is recorded with its author and date. We're glad to have you with us." }
+  };
+  const T = TEXTS[localStorage.getItem('axon_lang') || 'ar'] || TEXTS.ar;
+
+  const box = document.getElementById('axonWelcome');
+  const playBtn = document.getElementById('awPlay');
+  let audio = null, finished = false;
+
+  function close(){
+    try{ if(audio) audio.pause(); }catch(e){}
+    try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}
+    try{ localStorage.setItem(KEY, '1'); }catch(e){}
+    box.classList.remove('show','speaking');
+  }
+  function done(){
+    finished = true;
+    box.classList.remove('speaking');
+    playBtn.style.display = '';
+    playBtn.textContent = T.enter;
+  }
+  function speakTTS(auto){
+    if(!('speechSynthesis' in window)){ if(!auto) done(); return; }
+    const u = new SpeechSynthesisUtterance(T.body);
+    u.lang = T.tts;
+    u.onstart = ()=>{ box.classList.add('speaking'); playBtn.style.display = 'none'; };
+    u.onend = done;
+    u.onerror = ()=>{ if(!auto) done(); };
+    speechSynthesis.speak(u);
+  }
+  function start(auto){
+    audio = new Audio(T.audio);
+    audio.onended = done;
+    audio.play().then(()=>{
+      box.classList.add('speaking'); playBtn.style.display = 'none';
+    }).catch(()=>{ if(!auto) speakTTS(false); });
+  }
+
+  function open(){
+    const raw = (document.getElementById('profileName').textContent || '').trim();
+    const name = (raw && raw !== '—' && raw.indexOf('@') === -1) ? raw : '';
+    box.dir = T.dir;
+    document.getElementById('awGreet').textContent = T.hi + (name ? '، ' + name : '');
+    document.getElementById('awText').textContent = T.body;
+    playBtn.textContent = T.play;
+    document.getElementById('awSkip').textContent = T.skip;
+    box.classList.add('show');
+    start(true);
+  }
+
+  playBtn.addEventListener('click', ()=>{ if(finished) close(); else start(false); });
+  document.getElementById('awSkip').addEventListener('click', close);
+
+  let tries = 0;
+  const wait = setInterval(()=>{
+    const l = document.getElementById('pageLoader');
+    if((l && l.style.display === 'none') || ++tries > 40){ clearInterval(wait); open(); }
+  }, 250);
+})();
+</script> 
 </body>
 </html>
     
