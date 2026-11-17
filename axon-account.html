@@ -1455,9 +1455,8 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
 <script>
 (function(){
   const uid = sessionStorage.getItem('axon_user_id');
-  const KEY = 'axon_welcomed_' + uid;
   const force = new URLSearchParams(location.search).get('welcome') === '1';
-  if(!uid || (!force && localStorage.getItem(KEY))) return;
+  if(!uid) return;  
 
   const TEXTS = {
     ar:{ dir:'rtl', hi:'مرحبًا', tts:'ar-SA', audio:'welcome-ar.mp3', play:'🔊 استمع', enter:'دخول ←', skip:'تخطي',
@@ -1476,7 +1475,13 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
   function close(){
     try{ if(audio) audio.pause(); }catch(e){}
     try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}
-    try{ localStorage.setItem(KEY, '1'); }catch(e){}
+        if(!force && window.AXON_WELCOMED === false){
+      window.AXON_WELCOMED = true;
+      fetch(fnCtx('get-user-context'), {
+        method:'POST', headers: headers(),
+        body: JSON.stringify({ session_token: sessionToken, action:'mark_welcomed' })
+      }).catch(()=>{});
+    }
     box.classList.remove('show','speaking');
   }
   function done(){
