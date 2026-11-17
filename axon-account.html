@@ -1525,7 +1525,10 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
   let tries = 0;
   const wait = setInterval(()=>{
     const l = document.getElementById('pageLoader');
-    if((l && l.style.display === 'none') || ++tries > 40){ clearInterval(wait); open(); }
+        if((l && l.style.display === 'none') || ++tries > 40){
+      clearInterval(wait);
+      if(force || window.AXON_WELCOMED === false) open();
+    }
   }, 250);
 })();
 </script> 
